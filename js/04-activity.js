@@ -93,23 +93,81 @@ const CURRENT_YEAR = getJSTYear();
 const START_YEAR_MONTH_VIEW = 1992;
 const START_YEAR_GLOBAL = 1970;
 const AGE_START = 0;
-const ACTIVITY_LOCATION_COUNTRY_CONFIG = {
-    "Japan": { name: "Japan", flag: "🇯🇵" },
-    "China": { name: "China", flag: "🇨🇳" },
-    "Mainland China": { name: "China", flag: "🇨🇳" },
-    "Macau China": { name: "China", flag: "🇨🇳" },
-    "France": { name: "France", flag: "🇫🇷" },
-    "Israel": { name: "Israel", flag: "🇮🇱" },
-    "Egypt": { name: "Egypt", flag: "🇪🇬" },
-    "Scotland": { name: "United Kingdom", flag: "🇬🇧" },
-    "United Kingdom": { name: "United Kingdom", flag: "🇬🇧" },
-    "Germany": { name: "Germany", flag: "🇩🇪" },
-    "United States": { name: "United States of America", flag: "🇺🇸" },
-    "United States of America": { name: "United States of America", flag: "🇺🇸" },
-    "Mongolia": { name: "Mongolia", flag: "🇲🇳" },
-    "Azerbaijan": { name: "Azerbaijan", flag: "🇦🇿" },
-    "Thailand": { name: "Thailand", flag: "🇹🇭" }
-};
+const NON_LEAD_APPLICABLE_TYPES = ['映画', 'TV', '舞台', 'その他', '声の出演'];
+const ACTIVITY_LOCATION_COUNTRY_CONFIG = (function () {
+    const config = {};
+    const define = (keys, data) => {
+        const keyList = Array.isArray(keys) ? keys : [keys];
+        keyList.forEach(key => config[key] = data);
+    };
+
+    define("Japan", { name: "Japan", flag: "🇯🇵" });
+    define(["China", "Xi'an China", "Shanghai China", "Mainland China", "Macau China"], {
+        name: "China", flag: "🇨🇳",
+        url: "https://h2col.notion.site/2cb8a08476c780b1a965ee8b69159834"
+    });
+    define("France", {
+        name: "France", flag: "🇫🇷",
+        url: "https://h2col.notion.site/2cb8a08476c78098a480f52c8012b996"
+    });
+    define("Israel", {
+        name: "Israel", flag: "🇮🇱",
+        url: "https://h2col.notion.site/2cb8a08476c780769debc72878076024"
+    });
+    define("Egypt", {
+        name: "Egypt", flag: "🇪🇬",
+        url: "https://h2col.notion.site/2cb8a08476c78049bca5d345aa345d04"
+    });
+    define(["Scotland", "United Kingdom"], {
+        name: "United Kingdom", flag: "🇬🇧",
+        url: "https://h2col.notion.site/2cb8a08476c7809ab5caf84a17e2fa66"
+    });
+    define("Germany", {
+        name: "Germany", flag: "🇩🇪",
+        url: "https://h2col.notion.site/2cb8a08476c780ff8c18fe6103b79158"
+    });
+    define(["United States", "United States of America"], {
+        name: "United States of America", flag: "🇺🇸",
+        url: "https://h2col.notion.site/2cb8a08476c78016bb1adcf5754cefab"
+    });
+    define("Mongolia", {
+        name: "Mongolia", flag: "🇲🇳",
+        url: "https://h2col.notion.site/2cb8a08476c78034ab8bd55df8b81539"
+    });
+    define("Azerbaijan", {
+        name: "Azerbaijan", flag: "🇦🇿",
+        url: "https://h2col.notion.site/2cb8a08476c780b8b84ed151afdcf4a5"
+    });
+    define("Thailand", {
+        name: "Thailand", flag: "🇹🇭",
+        url: "https://h2col.notion.site/2f98a08476c78067b5e5ea33ff090d63"
+    });
+
+    return config;
+})();
+
+function isWorkMatch(item, showLeadRoleOnly, selectedTypes, showNonLeadOnly = false, showAwardOnly = false) {
+    const note = item.Note || '';
+    const noteWords = note.toLowerCase().split(',').map(word => word.trim());
+    if (noteWords.includes('memo') || noteWords.includes('uwasa')) return false;
+
+    if (showLeadRoleOnly || showNonLeadOnly) {
+        const isLead = item.Role === '主演';
+        const matchLead = showLeadRoleOnly && isLead && item.WorksType !== 'BOOK';
+        const matchNonLead = showNonLeadOnly && !isLead && NON_LEAD_APPLICABLE_TYPES.includes(item.WorksType);
+        if (!matchLead && !matchNonLead) return false;
+    }
+
+    if (showAwardOnly) {
+        const hasAward = item.Award && item.Award.trim() !== '';
+        if (!hasAward) return false;
+    }
+
+    const typeToMatch = normalizeWorksType(item.WorksType);
+    if (selectedTypes.length > 0 && !selectedTypes.includes(typeToMatch)) return false;
+
+    return true;
+}
 const ACTIVITY_MAP_LIBRARY_URLS = {
     d3: "https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js",
     topojson: "https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js",
@@ -119,7 +177,9 @@ const activityMapState = {
     initialized: false,
     pendingInit: null,
     locationFlagsMap: new Map(),
-    dismissalBound: false
+    dismissalBound: false,
+    worldData: null,
+    locationData: null
 };
 let locationData = [];
 let workLocationMap = {};
@@ -168,7 +228,7 @@ function ensureActivityMapLibraries() {
     });
 }
 
-function normalizeLocationDataset(locationData) {
+function normalizeLocationDataset(locationData, showLeadRoleOnly = false, selectedTypes = [], showNonLeadOnly = false, showAwardOnly = false) {
     const activeCountries = new Map();
     const countryEvents = new Map();
     const locationFlagsMap = new Map();
@@ -177,13 +237,19 @@ function normalizeLocationDataset(locationData) {
 
     locationData.forEach(row => {
         if (!row.Location) return;
+        // Apply filters to location data
+        const itemForMatch = {
+            WorksType: row.WorksType || '',
+            Role: row.Role || '',
+            Note: row.Note || '',
+            Award: row.Award || ''
+        };
+        if (!isWorkMatch(itemForMatch, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly)) return;
+
         const locations = row.Location.split(',').map(location => location.trim()).filter(Boolean);
 
+        // Skip legacy "Location" rows as they are now hardcoded in ACTIVITY_LOCATION_COUNTRY_CONFIG
         if (row.Name && row.Name.includes('Location')) {
-            locations.forEach(location => {
-                const config = ACTIVITY_LOCATION_COUNTRY_CONFIG[location];
-                if (config) locationFlagsMap.set(config.name, row.Url || '');
-            });
             return;
         }
 
@@ -199,7 +265,11 @@ function normalizeLocationDataset(locationData) {
                 year: row.Year || '',
                 name: row.Name || '',
                 location: row.Location || '',
-                url: row.Url || ''
+                url: row.Url || '',
+                worksType: row.WorksType || '',
+                role: row.Role || '',
+                note: row.Note || '',
+                award: row.Award || ''
             });
         });
     });
@@ -232,7 +302,7 @@ function displayActivityMapEvents(events, countryName) {
     const flagCountryName = countryName === 'Taiwan' ? 'China' : countryName;
     const config = ACTIVITY_LOCATION_COUNTRY_CONFIG[flagCountryName];
     const flag = config ? config.flag : '';
-    const url = activityMapState.locationFlagsMap.get(flagCountryName);
+    const url = config ? config.url : activityMapState.locationFlagsMap.get(flagCountryName);
 
     if (flag) {
         const flagItem = document.createElement('span');
@@ -275,18 +345,25 @@ function bindActivityMapDismissal() {
     activityMapState.dismissalBound = true;
 }
 
-function renderActivityMap(worldData, locationData) {
+function renderActivityMap(worldData, locationData, showLeadRoleOnly = false, selectedTypes = [], showNonLeadOnly = false, showAwardOnly = false) {
     const mapWrapper = document.getElementById('activity-map-wrapper');
     const loading = document.getElementById('activity-map-loading');
-    const svgElement = document.getElementById('activity-world-map');
-    if (!mapWrapper || !loading || !svgElement) return;
+    if (!mapWrapper || !loading) return;
+
+    // Clear existing SVG
+    mapWrapper.innerHTML = '';
+    const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgElement.id = 'activity-world-map';
+    svgElement.setAttribute('aria-label', 'Location map');
+    mapWrapper.appendChild(svgElement);
+
+    const { activeCountries, countryEvents, locationFlagsMap } = normalizeLocationDataset(locationData, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
+    
+    activityMapState.locationFlagsMap = locationFlagsMap;
 
     const parentWidth = mapWrapper.parentElement ? mapWrapper.parentElement.clientWidth : 1200;
     const width = Math.max(320, Math.min(parentWidth - 20, 1200));
     const height = Math.max(320, Math.round(width * 0.5));
-    const { activeCountries, countryEvents, locationFlagsMap } = normalizeLocationDataset(locationData);
-
-    activityMapState.locationFlagsMap = locationFlagsMap;
 
     const svg = window.d3.select(svgElement);
     svg.selectAll('*').remove();
@@ -388,11 +465,15 @@ function renderActivityMap(worldData, locationData) {
     bindActivityMapDismissal();
 }
 
-function initActivityMapView() {
+function initActivityMapView(showLeadRoleOnly = false, selectedTypes = [], showNonLeadOnly = false, showAwardOnly = false) {
     const loading = document.getElementById('activity-map-loading');
     const mapWrapper = document.getElementById('activity-map-wrapper');
     if (!loading || !mapWrapper) return Promise.resolve();
-    if (activityMapState.initialized) return Promise.resolve();
+
+    if (activityMapState.initialized && activityMapState.worldData && activityMapState.locationData) {
+        renderActivityMap(activityMapState.worldData, activityMapState.locationData, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
+        return Promise.resolve();
+    }
     if (activityMapState.pendingInit) return activityMapState.pendingInit;
 
     loading.textContent = '地図を読み込んでいます...';
@@ -405,7 +486,9 @@ function initActivityMapView() {
             fetch('data/location.csv').then(response => response.text()).then(parseCSV)
         ]))
         .then(([worldData, locationData]) => {
-            renderActivityMap(worldData, locationData);
+            activityMapState.worldData = worldData;
+            activityMapState.locationData = locationData;
+            renderActivityMap(worldData, locationData, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
             activityMapState.initialized = true;
         })
         .catch(error => {
@@ -627,25 +710,11 @@ function getFilteredActivityDates(item) {
     return relevantDates;
 }
 
-const NON_LEAD_APPLICABLE_TYPES = ['映画', 'TV', '舞台', 'その他', '声の出演'];
 
 function createMonthGraph(data, showLeadRoleOnly = false, selectedTypes = [], showNonLeadOnly = false, showAwardOnly = false) {
     const monthlyWorksMap = {};
     data.forEach(item => {
-        const note = item.Note || '';
-        const noteWords = note.toLowerCase().split(',').map(word => word.trim());
-        if (noteWords.includes('memo') || noteWords.includes('uwasa')) return;
-        if (showLeadRoleOnly || showNonLeadOnly) {
-            const isLead = item.Role === '主演';
-            const matchLead = showLeadRoleOnly && isLead && item.WorksType !== 'BOOK';
-            const matchNonLead = showNonLeadOnly && !isLead && NON_LEAD_APPLICABLE_TYPES.includes(item.WorksType);
-            if (!matchLead && !matchNonLead) return;
-        }
-        if (showAwardOnly) {
-            const hasAward = item.Award && item.Award.trim() !== '';
-            if (!hasAward) return;
-        }
-        if (selectedTypes.length > 0 && !selectedTypes.includes(item.WorksType)) return;
+        if (!isWorkMatch(item, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly)) return;
 
         const filteredActivityDates = getFilteredActivityDates(item);
         filteredActivityDates.forEach(dateStr => {
@@ -665,20 +734,7 @@ function createMonthGraph(data, showLeadRoleOnly = false, selectedTypes = [], sh
 function createYearGraph(data, showLeadRoleOnly = false, selectedTypes = [], showNonLeadOnly = false, showAwardOnly = false) {
     const yearlyWorksMap = {};
     data.forEach(item => {
-        const note = item.Note || '';
-        const noteWords = note.toLowerCase().split(',').map(word => word.trim());
-        if (noteWords.includes('memo') || noteWords.includes('uwasa')) return;
-        if (showLeadRoleOnly || showNonLeadOnly) {
-            const isLead = item.Role === '主演';
-            const matchLead = showLeadRoleOnly && isLead && item.WorksType !== 'BOOK';
-            const matchNonLead = showNonLeadOnly && !isLead && NON_LEAD_APPLICABLE_TYPES.includes(item.WorksType);
-            if (!matchLead && !matchNonLead) return;
-        }
-        if (showAwardOnly) {
-            const hasAward = item.Award && item.Award.trim() !== '';
-            if (!hasAward) return;
-        }
-        if (selectedTypes.length > 0 && !selectedTypes.includes(item.WorksType)) return;
+        if (!isWorkMatch(item, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly)) return;
 
         const filteredActivityDates = getFilteredActivityDates(item);
         const yearsWithActivity = new Set();
@@ -697,20 +753,7 @@ function createYearGraph(data, showLeadRoleOnly = false, selectedTypes = [], sho
 function createAgeGraph(data, showLeadRoleOnly = false, selectedTypes = [], showNonLeadOnly = false, showAwardOnly = false) {
     const ageWorksMap = {};
     data.forEach(item => {
-        const note = item.Note || '';
-        const noteWords = note.toLowerCase().split(',').map(word => word.trim());
-        if (noteWords.includes('memo') || noteWords.includes('uwasa')) return;
-        if (showLeadRoleOnly || showNonLeadOnly) {
-            const isLead = item.Role === '主演';
-            const matchLead = showLeadRoleOnly && isLead && item.WorksType !== 'BOOK';
-            const matchNonLead = showNonLeadOnly && !isLead && NON_LEAD_APPLICABLE_TYPES.includes(item.WorksType);
-            if (!matchLead && !matchNonLead) return;
-        }
-        if (showAwardOnly) {
-            const hasAward = item.Award && item.Award.trim() !== '';
-            if (!hasAward) return;
-        }
-        if (selectedTypes.length > 0 && !selectedTypes.includes(item.WorksType)) return;
+        if (!isWorkMatch(item, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly)) return;
 
         const filteredActivityDates = getFilteredActivityDates(item);
         const agesWithActivity = new Set();
@@ -829,17 +872,7 @@ function renderChartContent(data, showLeadRoleOnly, selectedTypes, showNonLeadOn
     } else if (currentChartMode === 'place') {
         const prefSet = new Set();
         data.forEach(item => {
-            if (showLeadRoleOnly || showNonLeadOnly) {
-                const isLead = item.Role === '主演';
-                const matchLead = showLeadRoleOnly && isLead && item.WorksType !== 'BOOK';
-                const matchNonLead = showNonLeadOnly && !isLead && NON_LEAD_APPLICABLE_TYPES.includes(item.WorksType);
-                if (!matchLead && !matchNonLead) return;
-            }
-            if (showAwardOnly) {
-                const hasAward = item.Award && item.Award.trim() !== '';
-                if (!hasAward) return;
-            }
-            if (selectedTypes.length > 0 && !selectedTypes.includes(item.WorksType)) return;
+            if (!isWorkMatch(item, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly)) return;
 
             if (item.Place) {
                 item.Place.split(',').forEach(p => {
@@ -866,38 +899,30 @@ function renderChartContent(data, showLeadRoleOnly, selectedTypes, showNonLeadOn
     if (currentChartMode === 'location') {
         locationData.forEach(loc => {
             if (!loc.Location || (loc.Name && loc.Name.trim() === 'Location')) return;
+            if (!isWorkMatch(loc, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly)) return;
             const countries = loc.Location.split(',').map(c => c.trim()).filter(Boolean);
             countries.forEach(c => {
                 const config = ACTIVITY_LOCATION_COUNTRY_CONFIG[c];
                 const mappedName = config ? config.name : c;
                 if (aggregatedData[mappedName]) {
                     aggregatedData[mappedName].total++;
+                    const locType = loc.WorksType || '';
                     aggregatedData[mappedName].worksList.push({
                         Title: loc.Name || '',
                         DateStart: loc.Year || '',
-                        WorksType: 'Location',
+                        WorksType: locType,
                         Location: loc.Location,
-                        Url: loc.Url
+                        Url: loc.Url,
+                        Role: loc.Role || ''
                     });
-                    aggregatedData[mappedName].typeCounts['Location'] = (aggregatedData[mappedName].typeCounts['Location'] || 0) + 1;
+                    const nType = normalizeWorksType(locType);
+                    aggregatedData[mappedName].typeCounts[nType] = (aggregatedData[mappedName].typeCounts[nType] || 0) + 1;
                 }
             });
         });
     } else {
         data.forEach(item => {
-            const note = item.Note || '';
-            if (note.toLowerCase().includes('memo') || note.toLowerCase().includes('uwasa')) return;
-            if (showLeadRoleOnly || showNonLeadOnly) {
-                const isLead = item.Role === '主演';
-                const matchLead = showLeadRoleOnly && isLead && item.WorksType !== 'BOOK';
-                const matchNonLead = showNonLeadOnly && !isLead && NON_LEAD_APPLICABLE_TYPES.includes(item.WorksType);
-                if (!matchLead && !matchNonLead) return;
-            }
-            if (showAwardOnly) {
-                const hasAward = item.Award && item.Award.trim() !== '';
-                if (!hasAward) return;
-            }
-            if (selectedTypes.length > 0 && !selectedTypes.includes(item.WorksType)) return;
+            if (!isWorkMatch(item, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly)) return;
 
             const keys = new Set();
             const filteredActivityDates = getFilteredActivityDates(item);
@@ -1170,20 +1195,21 @@ document.addEventListener('DOMContentLoaded', function () {
             views.japanMap.style.display = 'block';
             const detailContainer = document.getElementById('works-detail-container');
             if (detailContainer) detailContainer.style.display = 'none';
-            initJapanPrefectureMap(worksData);
+            const filteredWorks = worksData.filter(item => isWorkMatch(item, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly));
+            initJapanPrefectureMap(filteredWorks);
         } else if (mapFilterOn) {
             views.map.style.display = 'block';
             const detailContainer = document.getElementById('works-detail-container');
             if (detailContainer) detailContainer.style.display = 'none';
-            initActivityMapView();
+            initActivityMapView(showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
         } else {
             views.month.style.display = 'block'; createMonthGraph(worksData, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
         }
     }
 
     Promise.all([
-        fetch('../data/biography.csv').then(res => res.text()),
-        fetch('../data/location.csv').then(res => res.text())
+        fetch('data/biography.csv').then(res => res.text()),
+        fetch('data/location.csv').then(res => res.text())
     ]).then(([bioData, locData]) => {
         worksData = parseCSV(bioData);
         locationData = parseCSV(locData);
