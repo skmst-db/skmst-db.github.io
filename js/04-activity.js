@@ -89,6 +89,7 @@ function getActivityOrder(worksType) {
 // --- Constants ---
 const BIRTH_DATE = parseJSTDate('1973/10/14');
 const MONTH_NAMES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+const WEEK_NAMES = ['月', '火', '水', '木', '金', '土', '日'];
 const CURRENT_YEAR = getJSTYear();
 const START_YEAR_MONTH_VIEW = 1992;
 const START_YEAR_GLOBAL = 1970;
@@ -358,7 +359,7 @@ function renderActivityMap(worldData, locationData, showLeadRoleOnly = false, se
     mapWrapper.appendChild(svgElement);
 
     const { activeCountries, countryEvents, locationFlagsMap } = normalizeLocationDataset(locationData, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
-    
+
     activityMapState.locationFlagsMap = locationFlagsMap;
 
     const parentWidth = mapWrapper.parentElement ? mapWrapper.parentElement.clientWidth : 1200;
@@ -788,6 +789,9 @@ function createChartView(data, showLeadRoleOnly = false, selectedTypes = [], sho
             { id: 'age', label: 'Age' },
             { id: '5-year-age', label: 'Age-5Y' },
             { id: 'age-decade', label: 'Age-Decade' },
+            { id: 'month', label: 'Month' },
+            { id: 'quarter', label: 'Quarter' },
+            { id: 'week', label: 'Week' },
             { id: 'works-type', label: 'Work Type' },
             { id: 'role-type', label: 'Role Type' },
             { id: 'role', label: 'Role' },
@@ -838,6 +842,12 @@ function renderChartContent(data, showLeadRoleOnly, selectedTypes, showNonLeadOn
 
     if (currentChartMode === 'year') {
         for (let y = 1992; y <= CURRENT_YEAR; y++) sortedKeys.push(y);
+    } else if (currentChartMode === 'month') {
+        for (let m = 1; m <= 12; m++) sortedKeys.push(m);
+    } else if (currentChartMode === 'quarter') {
+        for (let q = 1; q <= 4; q++) sortedKeys.push(`Q${q}`);
+    } else if (currentChartMode === 'week') {
+        sortedKeys = [...WEEK_NAMES];
     } else if (currentChartMode === 'age') {
         const endAge = getAgeAtDate(BIRTH_DATE, getJSTNow());
         for (let a = 19; a <= endAge; a++) sortedKeys.push(a);
@@ -939,6 +949,12 @@ function renderChartContent(data, showLeadRoleOnly, selectedTypes, showNonLeadOn
                     const age = getAgeAtDate(BIRTH_DATE, dateObj);
                     if (age >= 19) key = age < 20 ? `${age}` : `${Math.floor(age / 5) * 5}-${Math.floor(age / 5) * 5 + 4}`;
                 } else if (currentChartMode === 'age') key = getAgeAtDate(BIRTH_DATE, dateObj);
+                else if (currentChartMode === 'month') key = dateObj.getUTCMonth() + 1;
+                else if (currentChartMode === 'quarter') key = `Q${Math.floor(dateObj.getUTCMonth() / 3) + 1}`;
+                else if (currentChartMode === 'week') {
+                    const day = dateObj.getUTCDay(); // 0 (Sun) to 6 (Sat)
+                    key = WEEK_NAMES[day === 0 ? 6 : day - 1];
+                }
                 else if (currentChartMode === 'age-decade') key = Math.floor(getAgeAtDate(BIRTH_DATE, dateObj) / 10) * 10 + 's';
                 else if (currentChartMode === 'works-type') key = normalizeWorksType(item.WorksType);
                 else if (currentChartMode === 'role-type') {
@@ -1021,7 +1037,11 @@ function renderChartContent(data, showLeadRoleOnly, selectedTypes, showNonLeadOn
         label.className = 'chart-bar-label';
         let labelText = key;
         if (currentChartMode === 'year') labelText = String(key).slice(-2);
-        else if (currentChartMode === 'works-type') {
+        else if (currentChartMode === 'month') {
+            labelText = String(key).padStart(2, '0');
+        } else if (currentChartMode === 'quarter') {
+            labelText = key;
+        } else if (currentChartMode === 'works-type') {
             labelText = key;
         } else if (currentChartMode === 'location') {
             const config = Object.values(ACTIVITY_LOCATION_COUNTRY_CONFIG).find(c => c.name === key);
@@ -1082,11 +1102,10 @@ function showWorksDetail(key, worksDataMap, viewType) {
 
     let works = worksDataMap[key] || [];
     let title = '';
-    if (viewType === 'month') {
-        const [y, m] = key.split('-');
-        const monthNum = (parseInt(m) + 1).toString().padStart(2, '0');
-        title = `Month: ${y}-${monthNum}`;
-    } else if (viewType === 'year') title = `Year: ${key}`;
+    if (viewType === 'year') title = `Year: ${key}`;
+    else if (viewType === 'month') title = `Month: ${key}`;
+    else if (viewType === 'quarter') title = `Quarter: ${key}`;
+    else if (viewType === 'week') title = `Week: ${key}曜日`;
     else if (viewType === 'age') title = `公開時年齢: ${key}`;
     else if (viewType === 'decade') title = `Decade: ${key}`;
     else if (viewType === '5-year') title = `Period: ${key}`;
