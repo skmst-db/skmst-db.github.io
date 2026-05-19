@@ -384,9 +384,10 @@
             </div>
 
             <div class="about-report-container" id="report-issue-container" hidden>
-                <iframe src="https://h2col.notion.site/ebd/18e8a08476c780d0bfeadee886962819?pm=s" frameborder="0"
+                <iframe id="report-issue-frame" src="about:blank"
+                    data-src="https://h2col.notion.site/ebd/18e8a08476c780d0bfeadee886962819?pm=s" frameborder="0"
                     allowfullscreen sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                    title="Report an Issue">
+                    loading="lazy" title="Report an Issue">
                 </iframe>
             </div>
         </main>
@@ -484,6 +485,7 @@
         function initializeReportIssue() {
             const trigger = document.getElementById('report-issue-trigger');
             const container = document.getElementById('report-issue-container');
+            const frame = document.getElementById('report-issue-frame');
 
             if (!trigger || !container) return;
 
@@ -493,6 +495,10 @@
                 const isHidden = container.hasAttribute('hidden');
 
                 if (isHidden) {
+                    if (frame && frame.dataset.src && frame.getAttribute('src') === 'about:blank') {
+                        frame.setAttribute('src', frame.dataset.src);
+                    }
+
                     container.removeAttribute('hidden');
 
                     setTimeout(() => {
