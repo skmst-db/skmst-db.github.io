@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!-- Analytics and Tracking -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6C7BJGKMFT"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-6C7BJGKMFT');
+    </script>
+
+    <!-- Meta Tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="堺雅人データベース【非公式】 / Sakai Masato Database [Unofficial]">
+    <meta name="keywords"
+        content="堺雅人, Sakai Masato, Masato Sakai, Database, heatmap, contribution graph, calendar, カレンダー">
+
+    <!-- Title -->
+    <title>Sakai Masato Database</title>
+
+    <!-- Favicon for all devices and platforms -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+    <link rel="shortcut icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <!-- Android Chrome -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png">
+
+    <!-- External Stylesheets and Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+        <link rel="stylesheet" href="css/02-works.css">
+
+    <!-- Scripts and Other Resources -->
+    <script src="js/global-init.js"></script>
+    <script src="navi/navHighlight.js"></script>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <!-- Navbar content will be loaded here -->
+    </aside>
+
+    <div class="main-content-wrapper">
+        <div class="content-header">
+            <h1 class="title">WORKS</h1>
+            <div class="stats-summary" id="stats-summary">
+                <!-- Stats will be injected here -->
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">全て</button>
+                <button class="filter-btn" data-filter="映画">映画</button>
+                <button class="filter-btn" data-filter="TV">TV</button>
+                <button class="filter-btn" data-filter="舞台">舞台</button>
+                <button class="filter-btn" data-filter="その他">その他</button>
+                <button class="filter-btn" data-filter="声の出演">声の出演</button>
+                <button class="filter-btn" data-filter="BOOK">BOOK</button>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-bottom: 40px; gap: 20px; flex-wrap: wrap;">
+                <div class="switch-container" style="margin-left: 0; margin-bottom: 0;">
+                    <label class="switch">
+                        <input type="checkbox" id="lead-role-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="switch-label">主演作品</span>
+                </div>
+                <div class="switch-container" style="margin-left: 0; margin-bottom: 0;">
+                    <label class="switch">
+                        <input type="checkbox" id="award-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="switch-label">個人受賞作品</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-container" id="timeline-container">
+            <!-- Skeleton timeline items for loading feedback -->
+            <div class="timeline-year skeleton-year">
+                <div class="year-label skeleton-label">Loading...</div>
+                <div class="timeline-items">
+                    <div class="timeline-item lead-role skeleton-item">
+                        <div class="timeline-content skeleton-content"></div>
+                    </div>
+                    <div class="timeline-item non-lead-role skeleton-item">
+                        <div class="timeline-content skeleton-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/schedule.js"></script>
+    <script src="js/02-works.js"></script>
+</body>
+
+</html>
