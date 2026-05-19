@@ -21,9 +21,7 @@
 
     <!-- Site globals: color vars + dark mode -->
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="navi/navi.css">
-    <script src="js/mobileview.js"></script>
-    <script src="js/darkmode.js"></script>
+    <script src="js/global-init.js"></script>
     <script src="navi/navHighlight.js"></script>
     <style>
         :root {
@@ -70,10 +68,6 @@
         .hp-carousel-outer:active {
             transform: translateY(2px);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .dark-mode .hp-carousel-outer {
-            border-color: var(--border-color);
         }
 
         .carousel-track {
@@ -271,7 +265,6 @@
             }
 
             .slide-name {
-                white-space: normal;
                 font-size: 20px;
             }
 
@@ -317,11 +310,6 @@
 
     <script>
         const SLIDES = [
-            {
-                name: '『平場の月』Blu-ray &amp; DVD',
-                info: '2026年4月24日 発売',
-                url: 'https://amzn.asia/d/000fz4v8'
-            },
             {
                 name: '日曜劇場『VIVANT』',
                 info: '2026年7月～12月 毎週日曜よる9時放送',
