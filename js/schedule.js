@@ -120,7 +120,10 @@ async function parseOtherCSV() {
     }
 }
 
+let cachedHolidays = null;
+
 async function parseSyukujitsuCSV() {
+    if (cachedHolidays) return cachedHolidays;
     try {
         const response = await fetch('/data/syukujitsu.csv');
         const data = await response.text();
@@ -141,7 +144,8 @@ async function parseSyukujitsuCSV() {
                 source: 'syukujitsu'
             };
         }).filter(e => e && e.title);
-        return events;
+        cachedHolidays = events;
+        return cachedHolidays;
     } catch (e) { return []; }
 }
 
