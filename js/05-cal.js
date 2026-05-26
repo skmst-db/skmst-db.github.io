@@ -366,14 +366,15 @@ async function renderWeekView() {
         : weekDates[0];
 
     currentWeekSelectedDate = selectedDate;
-    createWeekDateNavigation();
+    await createWeekDateNavigation();
     await loadWeekEventsForDate(selectedDate);
 }
 
-function createWeekDateNavigation() {
+async function createWeekDateNavigation() {
     const navigation = document.getElementById('week-date-navigation');
     if (!navigation) return;
 
+    const holidays = await parseSyukujitsuCSV();
     const weekDates = getWeekViewDates();
     const selectedDate = (currentWeekSelectedDate && weekDates.some(date => isSameJSTDay(date, currentWeekSelectedDate)))
         ? currentWeekSelectedDate
@@ -398,13 +399,16 @@ function createWeekDateNavigation() {
 
         const weekday = document.createElement('div');
         weekday.className = 'date-weekday';
-        weekday.textContent = getJapaneseWeekday(date);
+        
+        const isHoliday = holidays.some(h => isSameJSTDay(h.startDate, date));
+        const weekdayText = getJapaneseWeekday(date);
+        weekday.textContent = isHoliday ? `${weekdayText}（祝日）` : weekdayText;
 
         item.appendChild(day);
         item.appendChild(weekday);
-        item.addEventListener('click', () => {
+        item.addEventListener('click', async () => {
             currentWeekSelectedDate = parseJSTDate(item.dataset.date);
-            createWeekDateNavigation();
+            await createWeekDateNavigation();
             loadWeekEventsForDate(currentWeekSelectedDate);
         });
 
@@ -528,6 +532,7 @@ async function loadWeekEventsForDate(selectedDate) {
     const normalizedDate = getWeekViewDayStart(selectedDate);
     const today = getWeekViewDayStart(getJSTNow());
     const events = await parseWeekViewCSV();
+    const otherEvents = await parseOtherCSV();
     const dateEvents = [];
     const cards = [];
 
@@ -595,6 +600,18 @@ async function loadWeekEventsForDate(selectedDate) {
             }
         }
         cards.push(...getWeekViewUpcomingEventCards(events, normalizedDate));
+    }
+
+    // other.csv: show only for today and future dates, title only, no anniversary/milestone
+    // sorted by date descending (newest first) — placed before biography anniversary/milestone
+    if (normalizedDate >= today) {
+        const matchingOtherEvents = otherEvents
+            .filter(e => isSameJSTDay(e.startDate, normalizedDate))
+            .sort((a, b) => b.startDate - a.startDate);
+        matchingOtherEvents.forEach(e => {
+            const dateStr = formatJSTDateJapanese(e.startDate);
+            cards.push(createWeekViewCard(e.title, e.url, '', dateStr));
+        });
     }
 
     if (dateEvents.length > 0) {
@@ -667,6 +684,69 @@ function getInitialViewMode() {
     return 'upcoming';
 }
 
+async function checkWeekViewEventsForToday() {
+    try {
+        const today = getWeekViewDayStart(getJSTNow());
+        
+        // 1. Check Sakai Masato's birthday
+        const bdayInfo = getSakaiBirthdayInfo(today);
+        if (bdayInfo.isBirthday) {
+            return true;
+        }
+
+        // 2. Check otherEvents for today
+        const otherEvents = await parseOtherCSV();
+        const hasOtherEventToday = otherEvents.some(e => isSameJSTDay(e.startDate, today));
+        if (hasOtherEventToday) {
+            return true;
+        }
+
+        // 3. Check biographyEvents (weekViewCSV) for today
+        const events = await parseWeekViewCSV();
+        for (const event of events) {
+            if (isWeekViewDateDeleted(today, event.dateDelete)) continue;
+
+            const worksType = event.worksType || '';
+            const isTVMode = worksType === 'TV' && event.weekday && /^-?\d+([,，]\s*-?\d+)*$/.test(event.weekday.trim());
+            const isTVCurrentlyAiring = isTVMode && event.startDate && event.endDate &&
+                today >= event.startDate && today <= event.endDate;
+
+            if (worksType === '映画' && isFilmShowing(event.startDate, today)) {
+                return true;
+            } else if (isTVCurrentlyAiring && isWeekViewDateMatching(event.startDate, today)) {
+                return true;
+            } else if (isTVCurrentlyAiring && isWeekViewDateMatching(event.endDate, today)) {
+                return true;
+            } else if (isTVCurrentlyAiring &&
+                today > event.startDate &&
+                today < event.endDate &&
+                isValidWeekdayForDate(event.weekday, today)) {
+                return true;
+            } else if ((!isTVMode || !isTVCurrentlyAiring) && isWeekViewDateMatching(event.startDate, today)) {
+                return true;
+            } else if ((!isTVMode || !isTVCurrentlyAiring) && isWeekViewDateMatching(event.endDate, today)) {
+                return true;
+            }
+
+            if (event.startDate) {
+                const startMilestone = checkWeekViewMilestone(event.startDate, today);
+                if (startMilestone && today > event.startDate) {
+                    return true;
+                }
+            }
+            if (event.endDate) {
+                const endMilestone = checkWeekViewMilestone(event.endDate, today);
+                if (endMilestone && today > event.endDate) {
+                    return true;
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Error checking week view events for today:', e);
+    }
+    return false;
+}
+
 // [Used by: Schedule, Anniversary, Year]
 function getInitialCalendarSelection() {
     const params = new URLSearchParams(window.location.search);
@@ -686,6 +766,15 @@ function getInitialCalendarSelection() {
 // --- Main View Controllers ---
 // [Used by: Schedule, Anniversary, Year, Upcoming, Week]
 async function initializeCalendar() {
+    const requestedView = new URLSearchParams(window.location.search).get('view');
+    const validViews = new Set(['schedule', 'anniversary', 'upcoming', 'week', 'year']);
+    if (requestedView && validViews.has(requestedView)) {
+        currentViewMode = requestedView;
+    } else {
+        const hasEvents = await checkWeekViewEventsForToday();
+        currentViewMode = hasEvents ? 'week' : 'upcoming';
+    }
+
     initializeSelectors();
     await updateCalendar();
 }
@@ -1157,14 +1246,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
     obs.observe(document.body, { attributes: true });
 
-    window.addEventListener('resize', () => {
+    window.addEventListener('resize', async () => {
         if (currentViewMode === 'week') {
             const weekDates = getWeekViewDates();
             const resizedDate = (currentWeekSelectedDate && weekDates.some(date => isSameJSTDay(date, currentWeekSelectedDate)))
                 ? currentWeekSelectedDate
                 : weekDates[0];
             currentWeekSelectedDate = resizedDate;
-            createWeekDateNavigation();
+            await createWeekDateNavigation();
             loadWeekEventsForDate(resizedDate);
             return;
         }
