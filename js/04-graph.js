@@ -492,7 +492,7 @@ function renderGraphStructure(containerId, dataMap, labelMap, type) {
     if (type === 'month') {
         const latestYear = Math.max(CURRENT_YEAR, ...Object.keys(labelMap).map(key => parseInt(key.split('-')[0]) || 0));
         const years = [];
-        for (let year = latestYear; year >= START_YEAR_MONTH_VIEW; year--) {
+        for (let year = START_YEAR_MONTH_VIEW; year <= latestYear; year++) {
             years.push(year);
         }
 
