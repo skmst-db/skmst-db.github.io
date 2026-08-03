@@ -114,8 +114,12 @@ const ACTIVITY_LOCATION_COUNTRY_CONFIG = (function () {
         url: "https://h2col.notion.site/2cb8a08476c78034ab8bd55df8b81539"
     });
     define("Cyprus", {
-        name: "Azerbaijan", flag: "🇨🇾",
+        name: "Cyprus", flag: "🇨🇾",
         url: "https://h2col.notion.site/3a98a08476c780aa934fdd43c9790dd0"
+    });
+        define("Cambodia", {
+        name: "Cambodia", flag: "🇰🇭",
+        url: "https://h2col.notion.site/3b18a08476c7807ea260c9515edd2209"
     });
     define("Azerbaijan", {
         name: "Azerbaijan", flag: "🇦🇿",
