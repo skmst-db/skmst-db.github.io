@@ -114,20 +114,16 @@ const ACTIVITY_LOCATION_COUNTRY_CONFIG = (function () {
         url: "https://h2col.notion.site/2cb8a08476c78034ab8bd55df8b81539"
     });
     define("Cyprus", {
-        name: "Cyprus", flag: "🇨🇾",
+        name: "Azerbaijan", flag: "🇨🇾",
         url: "https://h2col.notion.site/3a98a08476c780aa934fdd43c9790dd0"
     });
-    define("Cambodia", {
-        name: "Cambodia", flag: 🇰🇭",
-        url: "https://h2col.notion.site/3b18a08476c7807ea260c9515edd2209"
+    define("Azerbaijan", {
+        name: "Azerbaijan", flag: "🇦🇿",
+        url: "https://h2col.notion.site/2cb8a08476c780b8b84ed151afdcf4a5"
     });
     define("Thailand", {
         name: "Thailand", flag: "🇹🇭",
         url: "https://h2col.notion.site/2f98a08476c78067b5e5ea33ff090d63"
-    });
-        define("Azerbaijan", {
-        name: "Azerbaijan", flag: "🇦🇿",
-        url: "https://h2col.notion.site/2cb8a08476c780b8b84ed151afdcf4a5"
     });
 
     return config;
