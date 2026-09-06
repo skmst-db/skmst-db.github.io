@@ -66,6 +66,7 @@ function getActivityOrder(worksType) {
 
 // --- Constants ---
 const BIRTH_DATE = parseJSTDate('1973/10/14');
+const DEBUT_DATE = parseJSTDate('1992/09/23');
 const MONTH_NAMES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 const WEEK_NAMES = ['月', '火', '水', '木', '金', '土', '日'];
 const CURRENT_YEAR = getJSTYear();
@@ -771,6 +772,9 @@ function createChartView(data, showLeadRoleOnly = false, selectedTypes = [], sho
             { id: 'year', label: 'Year' },
             { id: '5-year', label: '5-Year' },
             { id: 'decade', label: 'Decade' },
+            { id: 'debut', label: 'Debut' },
+            { id: '5-year-debut', label: 'Debut-5Y' },
+            { id: 'debut-decade', label: 'Debut-Decade' },
             { id: 'age', label: 'Age' },
             { id: '5-year-age', label: 'Age-5Y' },
             { id: 'age-decade', label: 'Age-Decade' },
@@ -834,8 +838,36 @@ function renderChartContent(data, showLeadRoleOnly, selectedTypes, showNonLeadOn
     } else if (currentChartMode === 'week') {
         sortedKeys = [...WEEK_NAMES];
     } else if (currentChartMode === 'age') {
+        let startAge = 18;
+        if (Array.isArray(data) && data.length > 0) {
+            let minAge = Infinity;
+            data.forEach(item => {
+                const filteredActivityDates = getFilteredActivityDates(item);
+                filteredActivityDates.forEach(dateStr => {
+                    const dateObj = parseJSTDate(dateStr);
+                    if (dateObj) {
+                        const age = getAgeAtDate(BIRTH_DATE, dateObj);
+                        if (age < minAge) minAge = age;
+                    }
+                });
+            });
+            if (minAge !== Infinity) startAge = minAge;
+        }
         const endAge = getAgeAtDate(BIRTH_DATE, getJSTNow());
-        for (let a = 19; a <= endAge; a++) sortedKeys.push(a);
+        for (let a = startAge; a <= endAge; a++) sortedKeys.push(a);
+    } else if (currentChartMode === 'debut') {
+        const endDebut = getAgeAtDate(DEBUT_DATE, getJSTNow()) + 1;
+        for (let d = 1; d <= endDebut; d++) sortedKeys.push(d);
+    } else if (currentChartMode === '5-year-debut') {
+        const endDebut = getAgeAtDate(DEBUT_DATE, getJSTNow()) + 1;
+        for (let d = 1; d <= endDebut; d += 5) {
+            sortedKeys.push(`${d}-${d + 4}`);
+        }
+    } else if (currentChartMode === 'debut-decade') {
+        const endDebut = getAgeAtDate(DEBUT_DATE, getJSTNow()) + 1;
+        for (let dd = 1; dd <= endDebut; dd += 10) {
+            sortedKeys.push(`${dd}-${dd + 9}`);
+        }
     } else if (currentChartMode === 'decade') {
         for (let d = 1990; d <= Math.floor(CURRENT_YEAR / 10) * 10; d += 10) sortedKeys.push(d + 's');
     } else if (currentChartMode === '5-year') {
@@ -843,9 +875,7 @@ function renderChartContent(data, showLeadRoleOnly, selectedTypes, showNonLeadOn
         for (let y = 1995; y <= CURRENT_YEAR; y += 5) sortedKeys.push(`${y}-${y + 4}`);
     } else if (currentChartMode === '5-year-age') {
         const endAge = getAgeAtDate(BIRTH_DATE, getJSTNow());
-        for (let a = 19; a < 20; a++) {
-            sortedKeys.push(`${a}`);
-        }
+        sortedKeys.push('10s');
         for (let a = 20; a <= endAge; a += 5) {
             sortedKeys.push(`${a}-${a + 4}`);
         }
@@ -932,9 +962,24 @@ function renderChartContent(data, showLeadRoleOnly, selectedTypes, showNonLeadOn
                     key = y < 1995 ? '1992-1994' : `${1995 + Math.floor((y - 1995) / 5) * 5}-${1995 + Math.floor((y - 1995) / 5) * 5 + 4}`;
                 } else if (currentChartMode === '5-year-age') {
                     const age = getAgeAtDate(BIRTH_DATE, dateObj);
-                    if (age >= 19) key = age < 20 ? `${age}` : `${Math.floor(age / 5) * 5}-${Math.floor(age / 5) * 5 + 4}`;
+                    key = age < 20 ? '10s' : `${Math.floor(age / 5) * 5}-${Math.floor(age / 5) * 5 + 4}`;
                 } else if (currentChartMode === 'age') key = getAgeAtDate(BIRTH_DATE, dateObj);
-                else if (currentChartMode === 'month') key = dateObj.getUTCMonth() + 1;
+                else if (currentChartMode === 'debut') {
+                    const debutYear = getAgeAtDate(DEBUT_DATE, dateObj) + 1;
+                    if (debutYear >= 1) key = debutYear;
+                } else if (currentChartMode === '5-year-debut') {
+                    const debutYear = getAgeAtDate(DEBUT_DATE, dateObj) + 1;
+                    if (debutYear >= 1) {
+                        const start = Math.floor((debutYear - 1) / 5) * 5 + 1;
+                        key = `${start}-${start + 4}`;
+                    }
+                } else if (currentChartMode === 'debut-decade') {
+                    const debutYear = getAgeAtDate(DEBUT_DATE, dateObj) + 1;
+                    if (debutYear >= 1) {
+                        const start = Math.floor((debutYear - 1) / 10) * 10 + 1;
+                        key = `${start}-${start + 9}`;
+                    }
+                } else if (currentChartMode === 'month') key = dateObj.getUTCMonth() + 1;
                 else if (currentChartMode === 'quarter') key = `Q${Math.floor(dateObj.getUTCMonth() / 3) + 1}`;
                 else if (currentChartMode === 'week') {
                     const day = dateObj.getUTCDay(); // 0 (Sun) to 6 (Sat)
@@ -993,7 +1038,7 @@ function renderChartContent(data, showLeadRoleOnly, selectedTypes, showNonLeadOn
         const barContainer = document.createElement('div');
         barContainer.className = 'chart-bar-container';
         barContainer.style.flex = '0 0 auto';
-        barContainer.style.minWidth = (currentChartMode === 'year' || currentChartMode === 'age') ? '12px' : '45px';
+        barContainer.style.minWidth = (currentChartMode === 'year' || currentChartMode === 'age' || currentChartMode === 'debut') ? '12px' : '45px';
         barContainer.style.maxWidth = '100px';
         barContainer.style.margin = '0 5px';
         barContainer.style.display = 'flex';
@@ -1101,6 +1146,9 @@ function showWorksDetail(key, worksDataMap, viewType) {
     else if (viewType === 'week') title = `Week: ${key}曜日`;
     else if (viewType === 'age') title = `公開時年齢: ${key}`;
     else if (viewType === 'decade') title = `Decade: ${key}`;
+    else if (viewType === 'debut') title = `Debut: ${key}年目`;
+    else if (viewType === '5-year-debut') title = `Debut Period: ${key}`;
+    else if (viewType === 'debut-decade') title = `Debut Decade: ${key}`;
     else if (viewType === '5-year') title = `Period: ${key}`;
     else if (viewType === '5-year-age') title = `Age Period: ${key}`;
     else if (viewType === 'age-decade') title = `Age Decade: ${key}`;
