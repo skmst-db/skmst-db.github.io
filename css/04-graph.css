@@ -50,7 +50,8 @@ body {
     border-radius: 8px;
     padding: 15px;
     width: fit-content;
-    max-width: 95%; /* Reduced slightly to ensure some margin on very small screens */
+    max-width: 95%;
+    /* Reduced slightly to ensure some margin on very small screens */
     box-sizing: border-box;
     margin-left: auto;
     margin-right: auto;
@@ -338,6 +339,17 @@ input:checked+.slider:before {
     box-sizing: border-box;
 }
 
+.current-cell-flag {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 9px;
+    line-height: 1;
+    z-index: 10;
+    pointer-events: none;
+}
+
 /* Activity type colors */
 .activity-movie {
     background-color: rgba(0, 123, 255, 0.5);
@@ -423,7 +435,8 @@ input:checked+.slider:before {
     .year-header-row,
     .digit-label-row,
     .year-view-row,
-    .age-view-row {
+    .age-view-row,
+    .debut-view-row {
         height: var(--activity-cell-size);
     }
 
@@ -435,8 +448,10 @@ input:checked+.slider:before {
     .digit-label-spacer,
     .year-view-label,
     .age-view-label,
+    .debut-view-label,
     .year-view-cell,
-    .age-view-cell {
+    .age-view-cell,
+    .debut-view-cell {
         width: var(--activity-cell-size) !important;
         min-width: var(--activity-cell-size) !important;
         height: var(--activity-cell-size) !important;
@@ -445,7 +460,8 @@ input:checked+.slider:before {
 
     .year-box,
     .year-box-year-view,
-    .year-box-age-view {
+    .year-box-age-view,
+    .year-box-debut-view {
         height: var(--activity-cell-size);
         width: var(--activity-cell-size);
         margin: 0;
@@ -685,13 +701,15 @@ input:checked+.slider:before {
 }
 
 .year-view-row,
-.age-view-row {
+.age-view-row,
+.debut-view-row {
     display: table-row;
     height: var(--activity-cell-size);
 }
 
 .year-view-label,
-.age-view-label {
+.age-view-label,
+.debut-view-label {
     display: table-cell;
     vertical-align: middle;
     width: var(--activity-cell-size);
@@ -699,7 +717,8 @@ input:checked+.slider:before {
 }
 
 .year-view-cell,
-.age-view-cell {
+.age-view-cell,
+.debut-view-cell {
     display: table-cell;
     vertical-align: middle;
     width: var(--activity-cell-size);
@@ -708,7 +727,8 @@ input:checked+.slider:before {
 }
 
 .year-box-year-view,
-.year-box-age-view {
+.year-box-age-view,
+.year-box-debut-view {
     height: var(--activity-cell-size);
     width: var(--activity-cell-size);
     border-radius: var(--activity-cell-radius);
@@ -720,13 +740,15 @@ input:checked+.slider:before {
 }
 
 .year-box-year-view.clickable,
-.year-box-age-view.clickable {
+.year-box-age-view.clickable,
+.year-box-debut-view.clickable {
     cursor: pointer;
     transition: transform 0.2s ease;
 }
 
 .year-box-year-view.clickable:hover,
-.year-box-age-view.clickable:hover {
+.year-box-age-view.clickable:hover,
+.year-box-debut-view.clickable:hover {
     transform: scale(1.1);
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
