@@ -494,6 +494,19 @@ function renderGraphStructure(containerId, dataMap, labelMap, type) {
     const graphHTML = document.createElement('div');
     graphHTML.className = 'graph-container';
 
+    // Compute the "current" key for each view type to mark the 🚩 cell
+    const jstNow = getJSTNow();
+    let currentCellKey;
+    if (type === 'month') {
+        currentCellKey = `${jstNow.getUTCFullYear()}-${jstNow.getUTCMonth() + 1}`;
+    } else if (type === 'year') {
+        currentCellKey = jstNow.getUTCFullYear();
+    } else if (type === 'age') {
+        currentCellKey = getAgeAtDate(BIRTH_DATE, jstNow);
+    } else if (type === 'debut-view') {
+        currentCellKey = getAgeAtDate(DEBUT_DATE, jstNow) + 1;
+    }
+
     if (type === 'month') {
         const latestYear = Math.max(CURRENT_YEAR, ...Object.keys(labelMap).map(key => parseInt(key.split('-')[0]) || 0));
         const years = [];
@@ -570,13 +583,19 @@ function renderGraphStructure(containerId, dataMap, labelMap, type) {
                     yearBox.classList.add('year-box-empty');
                     yearBox.setAttribute('data-total-works', 0);
                 }
+                if (key === currentCellKey) {
+                    const flag = document.createElement('span');
+                    flag.className = 'current-cell-flag';
+                    flag.textContent = '🚩';
+                    yearBox.appendChild(flag);
+                }
                 yearCell.appendChild(yearBox);
                 monthRow.appendChild(yearCell);
             });
             graphHTML.appendChild(monthRow);
         }
 
-    } else if (type === 'year' || type === 'age') {
+    } else if (type === 'year' || type === 'age' || type === 'debut-view') {
         const digitLabelRow = document.createElement('div');
         digitLabelRow.className = 'digit-label-row';
         const digitSpacer = document.createElement('div');
@@ -588,33 +607,55 @@ function renderGraphStructure(containerId, dataMap, labelMap, type) {
             digitCell.className = 'digit-label-cell';
             const digitBox = document.createElement('div');
             digitBox.className = 'label-cell';
-            digitBox.textContent = i;
+            // debut-view: label 1-10; others: 0-9
+            digitBox.textContent = type === 'debut-view' ? (i + 1) : i;
             digitCell.appendChild(digitBox);
             digitLabelRow.appendChild(digitCell);
         }
         graphHTML.appendChild(digitLabelRow);
 
-        let currentDecadeStart = Math.floor((type === 'year' ? START_YEAR_GLOBAL : AGE_START) / 10) * 10;
-        const lastRelevantValue = type === 'year' ? CURRENT_YEAR : getAgeAtDate(BIRTH_DATE, getJSTNow());
-        const lastDecadeStart = Math.floor(lastRelevantValue / 10) * 10;
+        let baseStart;
+        if (type === 'year') baseStart = Math.floor(START_YEAR_GLOBAL / 10) * 10;
+        else if (type === 'age') baseStart = Math.floor(AGE_START / 10) * 10;
+        else baseStart = 1; // debut-view starts at year 1
 
-        for (let decadeStart = currentDecadeStart; decadeStart <= lastDecadeStart; decadeStart += 10) {
+        let lastRelevantValue;
+        if (type === 'year') lastRelevantValue = CURRENT_YEAR;
+        else if (type === 'age') lastRelevantValue = getAgeAtDate(BIRTH_DATE, getJSTNow());
+        else lastRelevantValue = getAgeAtDate(DEBUT_DATE, getJSTNow()) + 1; // debut year number (1-based)
+
+        // For debut-view the "decade" is groups of 10 starting from 1: 1-10, 11-20, ...
+        // We map debut year N to row = Math.floor((N-1)/10)*10 + 1, column = ((N-1)%10)
+        const firstRowStart = type === 'debut-view' ? 1 : Math.floor(baseStart / 10) * 10;
+        const lastRowStart = type === 'debut-view'
+            ? Math.floor((lastRelevantValue - 1) / 10) * 10 + 1
+            : Math.floor(lastRelevantValue / 10) * 10;
+
+        for (let rowStart = firstRowStart; rowStart <= lastRowStart; rowStart += 10) {
             const decadeRow = document.createElement('div');
-            decadeRow.className = `${type}-view-row`;
+            const rowClass = type === 'debut-view' ? 'debut-view' : (type === 'year' ? 'year-view' : 'age-view');
+            decadeRow.className = `${rowClass}-row`;
             const decadeLabelCell = document.createElement('div');
-            decadeLabelCell.className = `${type}-view-label`;
+            decadeLabelCell.className = `${rowClass}-label`;
             const decadeBox = document.createElement('div');
             decadeBox.className = 'label-cell';
-            decadeBox.textContent = `${String(decadeStart).slice(-2)}s`;
+            if (type === 'debut-view') {
+                // Label: 0, 1, 2, 3... (0-based decade index)
+                decadeBox.textContent = Math.floor((rowStart - 1) / 10);
+            } else {
+                decadeBox.textContent = `${String(rowStart).slice(-2)}s`;
+            }
             decadeLabelCell.appendChild(decadeBox);
             decadeRow.appendChild(decadeLabelCell);
 
             for (let i = 0; i < 10; i++) {
-                const value = decadeStart + i;
+                const value = rowStart + i;
                 const yearOrAgeCell = document.createElement('div');
-                yearOrAgeCell.className = `${type}-view-cell`;
+                yearOrAgeCell.className = `${rowClass}-cell`;
                 const yearOrAgeBox = document.createElement('div');
-                yearOrAgeBox.className = `${type === 'year' ? 'year-box-year-view' : 'year-box-age-view'}`;
+                if (type === 'year') yearOrAgeBox.className = 'year-box-year-view';
+                else if (type === 'age') yearOrAgeBox.className = 'year-box-age-view';
+                else yearOrAgeBox.className = 'year-box-debut-view';
                 const worksForKey = dataMap[value];
 
                 if (worksForKey && worksForKey.length > 0) {
@@ -646,6 +687,12 @@ function renderGraphStructure(containerId, dataMap, labelMap, type) {
                     });
                 } else {
                     yearOrAgeBox.classList.add('year-box-empty');
+                }
+                if (value === currentCellKey) {
+                    const flag = document.createElement('span');
+                    flag.className = 'current-cell-flag';
+                    flag.textContent = '🚩';
+                    yearOrAgeBox.appendChild(flag);
                 }
                 yearOrAgeCell.appendChild(yearOrAgeBox);
                 decadeRow.appendChild(yearOrAgeCell);
@@ -754,6 +801,29 @@ function createAgeGraph(data, showLeadRoleOnly = false, selectedTypes = [], show
         });
     });
     renderGraphStructure('age-graph-container', ageWorksMap, ageWorksMap, 'age');
+}
+
+function createDebutViewGraph(data, showLeadRoleOnly = false, selectedTypes = [], showNonLeadOnly = false, showAwardOnly = false) {
+    const debutWorksMap = {};
+    data.forEach(item => {
+        if (!isWorkMatch(item, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly)) return;
+
+        const filteredActivityDates = getFilteredActivityDates(item);
+        const debutYearsWithActivity = new Set();
+        filteredActivityDates.forEach(dateStr => {
+            const dateObj = parseJSTDate(dateStr);
+            if (dateObj) {
+                // debutYear is 1-based: 1992/09/23 is year 1
+                const debutYear = getAgeAtDate(DEBUT_DATE, dateObj) + 1;
+                if (debutYear >= 1) debutYearsWithActivity.add(debutYear);
+            }
+        });
+        debutYearsWithActivity.forEach(debutYear => {
+            if (!debutWorksMap[debutYear]) debutWorksMap[debutYear] = [];
+            if (!debutWorksMap[debutYear].some(work => work.Title === item.Title)) debutWorksMap[debutYear].push(item);
+        });
+    });
+    renderGraphStructure('debut-view-graph-container', debutWorksMap, debutWorksMap, 'debut-view');
 }
 
 let currentChartMode = 'year';
@@ -1147,6 +1217,7 @@ function showWorksDetail(key, worksDataMap, viewType) {
     else if (viewType === 'age') title = `公開時年齢: ${key}`;
     else if (viewType === 'decade') title = `Decade: ${key}`;
     else if (viewType === 'debut') title = `Debut: ${key}年目`;
+    else if (viewType === 'debut-view') title = `デビュー ${key}年目`;
     else if (viewType === '5-year-debut') title = `Debut Period: ${key}`;
     else if (viewType === 'debut-decade') title = `Debut Decade: ${key}`;
     else if (viewType === '5-year') title = `Period: ${key}`;
@@ -1236,6 +1307,7 @@ document.addEventListener('DOMContentLoaded', function () {
             month: document.getElementById('contribution-graph'),
             year: document.getElementById('year-graph-container'),
             age: document.getElementById('age-graph-container'),
+            debutView: document.getElementById('debut-view-graph-container'),
             chart: document.getElementById('chart-view-container'),
             map: document.getElementById('map-view-container'),
             japanMap: document.getElementById('japan-map-view-container')
@@ -1250,6 +1322,8 @@ document.addEventListener('DOMContentLoaded', function () {
             views.year.style.display = 'block'; createYearGraph(worksData, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
         } else if (document.getElementById('age-view-filter').checked) {
             views.age.style.display = 'block'; createAgeGraph(worksData, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
+        } else if (document.getElementById('debut-view-filter')?.checked) {
+            views.debutView.style.display = 'block'; createDebutViewGraph(worksData, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
         } else if (document.getElementById('chart-view-filter')?.checked) {
             views.chart.style.display = 'block'; createChartView(worksData, showLeadRoleOnly, selectedTypes, showNonLeadOnly, showAwardOnly);
         } else if (mapFilterOn && stageFilterOn) {
