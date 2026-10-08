@@ -3,79 +3,75 @@ document.addEventListener('DOMContentLoaded', function () {
     setInterval(updateProgressBars, 60000);
 });
 
+function getOrdinal(n) {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
 function updateProgressBars() {
     const now = getJSTNow();
     const year = now.getUTCFullYear();
     const month = now.getUTCMonth(); // 0-11
+    const date = now.getUTCDate();
 
-    // 0. Century Progress (2000-2099)
-    const centuryStart = Math.floor(year / 100) * 100;
-    const startOfCentury = new Date(Date.UTC(centuryStart, 0, 1));
-    const endOfCentury = new Date(Date.UTC(centuryStart + 100, 0, 1));
-    const centuryProgress = (now - startOfCentury) / (endOfCentury - startOfCentury) * 100;
-    updateBar('century', centuryProgress);
-    const centuryLabel = document.getElementById('century-label');
-    if (centuryLabel) {
-        const century = Math.floor(year / 100) + 1;
-        const suffix = (century % 10 === 1 && century % 100 !== 11) ? 'st' :
-            (century % 10 === 2 && century % 100 !== 12) ? 'nd' :
-                (century % 10 === 3 && century % 100 !== 13) ? 'rd' : 'th';
-        centuryLabel.textContent = `${century}${suffix}C`;
+    const birthDate = createJSTDate(1973, 9, 14); // Born: 1973-10-14
+    const debutDate = createJSTDate(1992, 8, 23); // Debut: 1992-09-23
+
+    // 1. 出道当前年的圆环进度条
+    const debutMonth = 8; // September (0-indexed)
+    const debutDay = 23;
+    let debutAge = year - 1992;
+    if (month < debutMonth || (month === debutMonth && date < debutDay)) {
+        debutAge--;
     }
 
-    // 1. Decade Progress (2020-2029)
-    const startOfDecade = new Date(Date.UTC(Math.floor(year / 10) * 10, 0, 1));
-    const endOfDecade = new Date(Date.UTC((Math.floor(year / 10) + 1) * 10, 0, 1));
-    const decadeProgress = (now - startOfDecade) / (endOfDecade - startOfDecade) * 100;
-    updateBar('decade', decadeProgress);
-    const decadeLabel = document.getElementById('decade-label');
-    if (decadeLabel) decadeLabel.textContent = `${Math.floor(year / 10) * 10}s`;
+    let lastDebutAnniversary = createJSTDate(year, debutMonth, debutDay);
+    let nextDebutAnniversary = createJSTDate(year + 1, debutMonth, debutDay);
 
-    // 2. Year Progress
-    const startOfYear = new Date(Date.UTC(year, 0, 1));
-    const endOfYear = new Date(Date.UTC(year + 1, 0, 1));
-    const yearProgress = (now - startOfYear) / (endOfYear - startOfYear) * 100;
-    updateBar('year', yearProgress);
-    const yearLabel = document.getElementById('year-label');
-    if (yearLabel) yearLabel.textContent = `${year}`;
+    if (now < lastDebutAnniversary) {
+        lastDebutAnniversary = createJSTDate(year - 1, debutMonth, debutDay);
+        nextDebutAnniversary = createJSTDate(year, debutMonth, debutDay);
+    }
 
-    // 3. Quarter Progress
-    const quarter = Math.floor(month / 3);
-    const startOfQuarter = new Date(Date.UTC(year, quarter * 3, 1));
-    const endOfQuarter = new Date(Date.UTC(year, (quarter + 1) * 3, 1));
-    const quarterProgress = (now - startOfQuarter) / (endOfQuarter - startOfQuarter) * 100;
-    updateBar('quarter', quarterProgress);
-    const quarterLabel = document.getElementById('quarter-label');
-    if (quarterLabel) quarterLabel.textContent = `Q${quarter + 1}`;
+    const debutYearProgress = (now - lastDebutAnniversary) / (nextDebutAnniversary - lastDebutAnniversary) * 100;
+    updateBar('debut-year', debutYearProgress);
+    const debutYearLabel = document.getElementById('debut-year-label');
+    if (debutYearLabel) debutYearLabel.textContent = getOrdinal(debutAge + 1);
 
-    // 4. Month Progress
-    const startOfMonth = new Date(Date.UTC(year, month, 1));
-    const endOfMonth = new Date(Date.UTC(year, month + 1, 1));
-    const monthProgress = (now - startOfMonth) / (endOfMonth - startOfMonth) * 100;
-    updateBar('month', monthProgress);
-    const monthNames = ["January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
-    const monthLabel = document.getElementById('month-label');
-    if (monthLabel) monthLabel.textContent = `${monthNames[month]}`;
+    // 2. 出道当前十年的圆环进度条
+    const debutDecadeStartAge = Math.floor(debutAge / 10) * 10;
+    const debutDecadeEndAge = debutDecadeStartAge + 10;
 
-    // 5. Sakai Masato Age Progress
-    // Born: 1973-10-14
+    const debutDecadeStart = createJSTDate(1992 + debutDecadeStartAge, debutMonth, debutDay);
+    const debutDecadeEnd = createJSTDate(1992 + debutDecadeEndAge, debutMonth, debutDay);
+
+    const debutDecadeProgress = (now - debutDecadeStart) / (debutDecadeEnd - debutDecadeStart) * 100;
+    updateBar('debut-decade', debutDecadeProgress);
+    const debutDecadeLabel = document.getElementById('debut-decade-label');
+    if (debutDecadeLabel) debutDecadeLabel.textContent = getOrdinal(debutDecadeEndAge);
+
+    // 3. 出道日的计数（起始日算作第1天）
+    const debutDaysDiff = getJSTDaysDifference(debutDate, now) + 1;
+    const debutDaysElem = document.getElementById('debut-counter-days');
+    if (debutDaysElem) debutDaysElem.textContent = `${debutDaysDiff}`;
+    const debutCounterLabel = document.getElementById('debut-counter-label');
+    if (debutCounterLabel) debutCounterLabel.textContent = 'Days';
+
+    // 4. 当前年龄的圆环进度条
     const birthMonth = 9; // October (0-indexed)
     const birthDay = 14;
-
-    // Calculate current age
     let age = year - 1973;
-    if (month < birthMonth || (month === birthMonth && now.getUTCDate() < birthDay)) {
+    if (month < birthMonth || (month === birthMonth && date < birthDay)) {
         age--;
     }
 
-    let lastBirthday = new Date(Date.UTC(year, birthMonth, birthDay));
-    let nextBirthday = new Date(Date.UTC(year + 1, birthMonth, birthDay));
+    let lastBirthday = createJSTDate(year, birthMonth, birthDay);
+    let nextBirthday = createJSTDate(year + 1, birthMonth, birthDay);
 
     if (now < lastBirthday) {
-        lastBirthday = new Date(Date.UTC(year - 1, birthMonth, birthDay));
-        nextBirthday = new Date(Date.UTC(year, birthMonth, birthDay));
+        lastBirthday = createJSTDate(year - 1, birthMonth, birthDay);
+        nextBirthday = createJSTDate(year, birthMonth, birthDay);
     }
 
     const ageProgress = (now - lastBirthday) / (nextBirthday - lastBirthday) * 100;
@@ -83,24 +79,32 @@ function updateProgressBars() {
     const ageLabel = document.getElementById('age-label');
     if (ageLabel) ageLabel.textContent = `${age}`;
 
-    // 6. 50s Decade Progress (or whatever decade he is in)
+    // 5. 当前年龄的十年的进度条
     const currentDecadeStartAge = Math.floor(age / 10) * 10;
     const currentDecadeEndAge = currentDecadeStartAge + 10;
 
-    const decadeStartBirthday = new Date(Date.UTC(1973 + currentDecadeStartAge, birthMonth, birthDay));
-    const decadeEndBirthday = new Date(Date.UTC(1973 + currentDecadeEndAge, birthMonth, birthDay));
+    const decadeStartBirthday = createJSTDate(1973 + currentDecadeStartAge, birthMonth, birthDay);
+    const decadeEndBirthday = createJSTDate(1973 + currentDecadeEndAge, birthMonth, birthDay);
 
     const lifeDecadeProgress = (now - decadeStartBirthday) / (decadeEndBirthday - decadeStartBirthday) * 100;
     updateBar('life-decade', lifeDecadeProgress);
     const lifeDecadeLabel = document.getElementById('life-decade-label');
     if (lifeDecadeLabel) lifeDecadeLabel.textContent = `${currentDecadeStartAge}s`;
 
-    // 7. Website Uptime
-    const launchDate = createJSTDate(1973, 9, 14);
-    const diffTime = Math.abs(now - launchDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const uptimeDays = document.getElementById('uptime-days');
-    if (uptimeDays) uptimeDays.textContent = `${diffDays}`;
+    // 6. 当前年龄的计数（起始日算作第1天）
+    const ageDaysDiff = getJSTDaysDifference(birthDate, now) + 1;
+    const ageDaysElem = document.getElementById('age-counter-days');
+    if (ageDaysElem) ageDaysElem.textContent = `${ageDaysDiff}`;
+    const ageCounterLabel = document.getElementById('age-counter-label');
+    if (ageCounterLabel) ageCounterLabel.textContent = 'Days';
+
+    // 7. 出道日到现在占出生日到现在的比重
+    const timeFromBirth = now - birthDate;
+    const timeFromDebut = now - debutDate;
+    const ratioProgress = (timeFromDebut / timeFromBirth) * 100;
+    updateBar('debut-ratio', ratioProgress);
+    const debutRatioLabel = document.getElementById('debut-ratio-label');
+    if (debutRatioLabel) debutRatioLabel.textContent = `Debut`;
 }
 
 function updateBar(idPrefix, percentage) {
@@ -116,7 +120,7 @@ function updateBar(idPrefix, percentage) {
             circle.style.strokeDashoffset = offset;
         }, 50);
     }
-    if (text) text.textContent = `${Math.floor(clampedPercentage)}%`;
+    if (text) text.textContent = `${Math.round(clampedPercentage)}%`;
 }
 
 // --- Showcase Logic ---
@@ -455,27 +459,32 @@ function renderProgressTiles(container) {
         return tile;
     };
 
-    // 1. Sakai Tiles
-    contentWrapper.appendChild(createTile('age', '--'));
-    contentWrapper.appendChild(createTile('life-decade', '--s'));
-
-    // 2. Now Tiles (Reordered: Month -> Century)
-    contentWrapper.appendChild(createTile('month', 'Month'));
-    contentWrapper.appendChild(createTile('quarter', 'QX'));
-    contentWrapper.appendChild(createTile('year', 'YYYY'));
-    contentWrapper.appendChild(createTile('decade', 'YYYYs'));
-    contentWrapper.appendChild(createTile('century', 'XXthC'));
-
-    // 3. Running Tile
-    const runningTile = document.createElement('div');
-    runningTile.className = 'progress-tile individual-tile running';
-    runningTile.innerHTML = `
-        <div class="progress-section">
-            <div class="uptime-content">
-                <div class="uptime-counter" id="uptime-days">--</div>
-                <div class="uptime-label">Days</div>
+    const createCounterTile = (idPrefix, label) => {
+        const tile = document.createElement('div');
+        tile.className = `progress-tile individual-tile running ${idPrefix}`;
+        tile.innerHTML = `
+            <div class="progress-section">
+                <div class="uptime-content">
+                    <div class="uptime-counter" id="${idPrefix}-days">--</div>
+                    <div class="uptime-label" id="${idPrefix}-label">${label}</div>
+                </div>
             </div>
-        </div>
-    `;
-    contentWrapper.appendChild(runningTile);
+        `;
+        return tile;
+    };
+
+    // 1. 出道当前年的圆环进度条
+    contentWrapper.appendChild(createTile('debut-year', '35th'));
+    // 2. 出道当前十年的圆环进度条
+    contentWrapper.appendChild(createTile('debut-decade', '40th'));
+    // 3. 出道日的计数
+    contentWrapper.appendChild(createCounterTile('debut-counter', 'Days'));
+    // 4. 当前年龄的圆环进度条
+    contentWrapper.appendChild(createTile('age', '52'));
+    // 5. 当前年龄的十年的进度条
+    contentWrapper.appendChild(createTile('life-decade', '50s'));
+    // 6. 当前年龄的计数
+    contentWrapper.appendChild(createCounterTile('age-counter', 'Days'));
+    // 7. 出道日到现在占出生日到现在的比重
+    contentWrapper.appendChild(createTile('debut-ratio', 'Debut'));
 }
