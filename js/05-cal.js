@@ -272,10 +272,10 @@ function showUpcomingDetails(date, events) {
     const container = document.getElementById('upcoming-details-container');
     const modal = document.getElementById('upcoming-modal-overlay');
     if (!dateLabel || !container || !modal) return;
-    
+
     const holidayEvent = events.find(e => e.source === 'syukujitsu');
     const holidayName = holidayEvent ? ` ${holidayEvent.title}` : '';
-    
+
     dateLabel.textContent = formatJSTDateJapanese(date) + holidayName;
     container.innerHTML = '';
 
@@ -399,7 +399,7 @@ async function createWeekDateNavigation() {
 
         const weekday = document.createElement('div');
         weekday.className = 'date-weekday';
-        
+
         const isHoliday = holidays.some(h => isSameJSTDay(h.startDate, date));
         const weekdayText = getJapaneseWeekday(date);
         weekday.textContent = isHoliday ? `${weekdayText}（祝日）` : weekdayText;
@@ -507,6 +507,10 @@ function getWeekViewEventCards(events, selectedDate) {
                 anniversaryText = '放送日';
                 dateText = `${formatWeekDateForDisplay(event.startDate)} - ${formatWeekDateForDisplay(event.endDate)}`;
                 break;
+            case 'stage-day':
+                anniversaryText = '公演日';
+                dateText = `${formatWeekDateForDisplay(event.startDate)} - ${formatWeekDateForDisplay(event.endDate)}`;
+                break;
             case 'film':
                 anniversaryText = '公開中';
                 dateText = `${formatWeekDateForDisplay(event.startDate)} 公開`;
@@ -551,6 +555,13 @@ async function loadWeekEventsForDate(selectedDate) {
         const isTVCurrentlyAiring = isTVMode && event.startDate && event.endDate &&
             normalizedDate >= event.startDate && normalizedDate <= event.endDate;
 
+        const isStageMode = worksType === '舞台';
+        const dateStr = formatJSTDate(normalizedDate);
+        const isStageActiveDate = isStageMode && (
+            (event.startDate && event.endDate && normalizedDate >= event.startDate && normalizedDate <= event.endDate) ||
+            (event.additionalDates && event.additionalDates.includes(dateStr))
+        );
+
         if (worksType === '映画' && isFilmShowing(event.startDate, normalizedDate)) {
             matchType = 'film';
         } else if (isTVCurrentlyAiring && isWeekViewDateMatching(event.startDate, normalizedDate)) {
@@ -562,6 +573,12 @@ async function loadWeekEventsForDate(selectedDate) {
             normalizedDate < event.endDate &&
             isValidWeekdayForDate(event.weekday, normalizedDate)) {
             matchType = 'tv-weekday';
+        } else if (isStageActiveDate && isWeekViewDateMatching(event.startDate, normalizedDate)) {
+            matchType = 'start';
+        } else if (isStageActiveDate && isWeekViewDateMatching(event.endDate, normalizedDate)) {
+            matchType = 'end';
+        } else if (isStageActiveDate) {
+            matchType = 'stage-day';
         } else if ((!isTVMode || !isTVCurrentlyAiring) && isWeekViewDateMatching(event.startDate, normalizedDate)) {
             matchType = 'start';
         } else if ((!isTVMode || !isTVCurrentlyAiring) && isWeekViewDateMatching(event.endDate, normalizedDate)) {
@@ -687,7 +704,7 @@ function getInitialViewMode() {
 async function checkWeekViewEventsForToday() {
     try {
         const today = getWeekViewDayStart(getJSTNow());
-        
+
         // 1. Check Sakai Masato's birthday
         const bdayInfo = getSakaiBirthdayInfo(today);
         if (bdayInfo.isBirthday) {
@@ -711,6 +728,13 @@ async function checkWeekViewEventsForToday() {
             const isTVCurrentlyAiring = isTVMode && event.startDate && event.endDate &&
                 today >= event.startDate && today <= event.endDate;
 
+            const isStageMode = worksType === '舞台';
+            const dateStr = formatJSTDate(today);
+            const isStageActiveDate = isStageMode && (
+                (event.startDate && event.endDate && today >= event.startDate && today <= event.endDate) ||
+                (event.additionalDates && event.additionalDates.includes(dateStr))
+            );
+
             if (worksType === '映画' && isFilmShowing(event.startDate, today)) {
                 return true;
             } else if (isTVCurrentlyAiring && isWeekViewDateMatching(event.startDate, today)) {
@@ -721,6 +745,8 @@ async function checkWeekViewEventsForToday() {
                 today > event.startDate &&
                 today < event.endDate &&
                 isValidWeekdayForDate(event.weekday, today)) {
+                return true;
+            } else if (isStageActiveDate) {
                 return true;
             } else if ((!isTVMode || !isTVCurrentlyAiring) && isWeekViewDateMatching(event.startDate, today)) {
                 return true;
