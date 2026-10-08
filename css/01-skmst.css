@@ -150,7 +150,7 @@ body {
 }
 
 .uptime-counter {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: bold;
     color: #333;
     text-align: center;
@@ -501,6 +501,10 @@ body {
 .dark-mode .uptime-counter,
 .dark-mode .individual-tile.running .uptime-counter {
     color: var(--text-color) !important;
+}
+
+.dark-mode .uptime-label {
+    color: #aaa !important;
 }
 
 /* Mobile adjustments */
