@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6C7BJGKMFT"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-6C7BJGKMFT');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="堺雅人データベース【非公式】 / Sakai Masato Database [Unofficial]">
+    <meta name="keywords"
+        content="堺雅人, Sakai Masato, Masato Sakai, Database, heatmap, contribution graph, calendar, カレンダー">
+    <meta name="theme-color" content="#131311">
+    <title>skmst-db</title>
+
+    <script>
+        (function () {
+            var t = 'dark';
+            try {
+                var s = localStorage.getItem('skmst-theme');
+                if (s === 'light' || s === 'dark') t = s;
+            } catch (e) { }
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+    <link rel="shortcut icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+JP:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script>
+        function getJSTNow() { const now = new Date(); return new Date(now.getTime() + 9 * 60 * 60 * 1000); }
+        function parseJSTDate(dateString) {
+            if (!dateString || typeof dateString !== 'string') return null;
+            const cleanDateString = dateString.trim();
+            if (!cleanDateString) return null;
+            const normalizedDate = cleanDateString.replace(/[年\-.]/g, '/').replace(/月/g, '/').replace(/日/g, '').replace(/\s+/g, '');
+            const parts = normalizedDate.split('/');
+            if (parts.length < 2 || parts.length > 3) return null;
+            const year = parseInt(parts[0], 10), month = parseInt(parts[1], 10), day = parts[2] ? parseInt(parts[2], 10) : 1;
+            if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+            if (month < 1 || month > 12) return null;
+            if (day < 1 || day > 31) return null;
+            return createJSTDate(year, month - 1, day);
+        }
+        function formatJSTDate(date) {
+            if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+            return `${date.getUTCFullYear()}/${String(date.getUTCMonth() + 1).padStart(2, '0')}/${String(date.getUTCDate()).padStart(2, '0')}`;
+        }
+        function formatJSTDateJapanese(date) {
+            if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+            return `${date.getUTCFullYear()}年${date.getUTCMonth() + 1}月${date.getUTCDate()}日`;
+        }
+        function formatJSTDateTimeJapanese(date) {
+            if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+            return `${date.getUTCFullYear()}年${date.getUTCMonth() + 1}月${date.getUTCDate()}日 ${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`;
+        }
+        function getJSTMidnight() { const now = getJSTNow(); return createJSTDate(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()); }
+        function getMillisecondsUntilJSTMidnight() { const now = getJSTNow(); const m = getJSTMidnight(); m.setUTCDate(m.getUTCDate() + 1); return m.getTime() - now.getTime(); }
+        function getJSTYear() { return getJSTNow().getUTCFullYear(); }
+        function getJSTMonth() { return getJSTNow().getUTCMonth(); }
+        function getJSTDate() { return getJSTNow().getUTCDate(); }
+        function getJSTHours() { return getJSTNow().getUTCHours(); }
+        function getJSTMinutes() { return getJSTNow().getUTCMinutes(); }
+        function getJSTSeconds() { return getJSTNow().getUTCSeconds(); }
+        function createJSTDate(year, month, day, hour = 0, minute = 0, second = 0) { return new Date(Date.UTC(year, month, day, hour, minute, second)); }
+        function isSameJSTDay(date1, date2) {
+            if (!date1 || !date2) return false;
+            return date1.getUTCFullYear() === date2.getUTCFullYear() && date1.getUTCMonth() === date2.getUTCMonth() && date1.getUTCDate() === date2.getUTCDate();
+        }
+        function isJSTToday(date) { return isSameJSTDay(date, getJSTNow()); }
+        function getJSTDaysDifference(date1, date2) {
+            const m1 = createJSTDate(date1.getUTCFullYear(), date1.getUTCMonth(), date1.getUTCDate());
+            const m2 = createJSTDate(date2.getUTCFullYear(), date2.getUTCMonth(), date2.getUTCDate());
+            return Math.floor((m2.getTime() - m1.getTime()) / (1000 * 60 * 60 * 24));
+        }
+        function formatDate(date) { return formatJSTDate(date); }
+        function toJST(date) { if (!date || !(date instanceof Date) || isNaN(date.getTime())) return new Date(NaN); return new Date(date.getTime()); }
+        function getJSTNowString() {
+            const now = getJSTNow();
+            return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')} ${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}:${String(now.getUTCSeconds()).padStart(2, '0')} JST`;
+        }
+    </script>
+
+    <style>
+        :root {
+            --ease: cubic-bezier(.25, .8, .25, 1);
+            --nav-h: 64px;
+            --font: 'IBM Plex Sans', 'IBM Plex Sans JP', sans-serif;
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --paper: #131311;
+            --ink: #E8E4DA;
+            --ink-soft: rgba(232, 228, 218, .70);
+            --ink-faint: rgba(232, 228, 218, .46);
+            --line: rgba(232, 228, 218, .15);
+            --line-strong: rgba(232, 228, 218, .36);
+            --card: rgba(255, 255, 255, .05);
+            --card-2: rgba(255, 255, 255, .055);
+            --grid-line: rgba(232, 228, 218, .05);
+            --grain-op: .055;
+            --teal: #57ADAF;
+            --teal-tint: rgba(87, 173, 175, .15);
+            --teal-line: rgba(87, 173, 175, .48);
+            --on-teal: #131311;
+            --amber: #D9A441;
+            --amber-tint: rgba(217, 164, 65, .15);
+            --viz-purple: #9D8FE8;
+            --viz-blue: #6FA3DC;
+            --viz-pink: #DE8FAF;
+            --viz-orange: #E0955C;
+            --viz-indigo: #8290E0;
+            --viz-slate: #A39C8C;
+            --fog-a: rgba(87, 173, 175, .14);
+            --fog-b: rgba(217, 164, 65, .11);
+            --shadow: 0 1px 2px rgba(0, 0, 0, .30), 0 10px 30px rgba(0, 0, 0, .28), 0 30px 80px rgba(0, 0, 0, .22);
+            --shadow-lift: 0 2px 4px rgba(0, 0, 0, .32), 0 14px 40px rgba(0, 0, 0, .32), 0 36px 90px rgba(0, 0, 0, .26);
+        }
+
+        :root[data-theme="light"] {
+            color-scheme: light;
+            --paper: #F2F0EA;
+            --ink: #26241F;
+            --ink-soft: rgba(38, 36, 31, .72);
+            --ink-faint: rgba(38, 36, 31, .48);
+            --line: rgba(38, 36, 31, .15);
+            --line-strong: rgba(38, 36, 31, .38);
+            --card: rgba(255, 255, 255, .58);
+            --card-2: rgba(255, 255, 255, .50);
+            --grid-line: rgba(38, 36, 31, .055);
+            --grain-op: .04;
+            --teal: #175E63;
+            --teal-tint: rgba(23, 94, 99, .11);
+            --teal-line: rgba(23, 94, 99, .42);
+            --on-teal: #F2F0EA;
+            --amber: #9A6B00;
+            --amber-tint: rgba(176, 124, 16, .14);
+            --viz-purple: #7C6FD0;
+            --viz-blue: #4E86C6;
+            --viz-pink: #C76E93;
+            --viz-orange: #C97A3D;
+            --viz-indigo: #5A6ACF;
+            --viz-slate: #8A8578;
+            --fog-a: rgba(23, 94, 99, .13);
+            --fog-b: rgba(201, 162, 39, .14);
+            --shadow: 0 1px 2px rgba(38, 36, 31, .06), 0 8px 24px rgba(38, 36, 31, .07), 0 24px 64px rgba(38, 36, 31, .06);
+            --shadow-lift: 0 2px 4px rgba(38, 36, 31, .08), 0 14px 36px rgba(38, 36, 31, .10), 0 32px 80px rgba(38, 36, 31, .08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            scrollbar-width: thin;
+            scrollbar-color: var(--line-strong) transparent;
+        }
+
+        body {
+            font-family: var(--font);
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--ink);
+            background: var(--paper);
+            padding-top: calc(var(--nav-h) + 26px);
+            min-height: 100vh;
+            transition: background-color .35s var(--ease), color .35s var(--ease);
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--line-strong);
+            border-radius: 8px;
+            border: 3px solid var(--paper);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--teal-line);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            pointer-events: none;
+            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 34px 34px;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            opacity: var(--grain-op);
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+        }
+
+        .fog {
+            position: fixed;
+            inset: -15%;
+            z-index: -3;
+            pointer-events: none;
+            filter: blur(90px);
+        }
+
+        .fog span {
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .fog-a {
+            width: 58vw;
+            height: 58vw;
+            top: -8%;
+            left: -6%;
+            background: radial-gradient(circle, var(--fog-a), transparent 70%);
+            animation: drift-a 70s var(--ease) infinite alternate;
+        }
+
+        .fog-b {
+            width: 48vw;
+            height: 48vw;
+            bottom: -12%;
+            right: -6%;
+            background: radial-gradient(circle, var(--fog-b), transparent 70%);
+            animation: drift-b 95s var(--ease) infinite alternate;
+        }
+
+        @keyframes drift-a {
+            from {
+                transform: translate(-4%, -2%) scale(1);
+            }
+
+            to {
+                transform: translate(5%, 4%) scale(1.08);
+            }
+        }
+
+        @keyframes drift-b {
+            from {
+                transform: translate(3%, 2%) scale(1.05);
+            }
+
+            to {
+                transform: translate(-4%, -3%) scale(1);
+            }
+        }
+
+        .mono {
+            font-family: var(--font);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--teal);
+            outline-offset: 2px;
+            border-radius: 6px;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: color-mix(in srgb, var(--paper) 74%, transparent);
+            -webkit-backdrop-filter: blur(18px) saturate(1.15);
+            backdrop-filter: blur(18px) saturate(1.15);
+            border-bottom: 1px solid var(--line);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 8px 24px rgba(0, 0, 0, .06), 0 24px 64px rgba(0, 0, 0, .04);
+        }
+
+        .nav-inner {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 10px 12px;
+            padding-top: calc(10px + env(safe-area-inset-top));
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .brand {
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-family: var(--font);
+            font-weight: 700;
+            font-size: 17px;
+            letter-spacing: .06em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .nav-links::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-links a {
+            font-family: var(--font);
+            font-size: 11.5px;
+            letter-spacing: .1em;
+            text-decoration: none;
+            color: var(--ink-soft);
+            padding: 8px 11px;
+            border-radius: 9px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            transition: color .2s var(--ease), background-color .2s var(--ease), border-color .2s var(--ease);
+        }
+
+        .nav-links a:hover {
+            color: var(--ink);
+            background: var(--card-2);
+        }
+
+        .nav-links a.active {
+            color: var(--teal);
+            background: var(--teal-tint);
+            border-color: var(--teal-line);
+        }
+
+        .nav-ctrl {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .nav-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            border: 1px solid var(--line);
+            background: var(--card-2);
+            display: grid;
+            place-items: center;
+            color: var(--ink-soft);
+            transition: color .2s var(--ease), border-color .2s var(--ease), background-color .2s var(--ease), transform .2s var(--ease);
+        }
+
+        .nav-btn:hover {
+            color: var(--teal);
+            border-color: var(--teal-line);
+            transform: translateY(-1px);
+        }
+
+        .nav-glyph {
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .main {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 12px 70px;
+        }
+
+        .stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        .card {
+            background: var(--card);
+            -webkit-backdrop-filter: blur(16px) saturate(1.12);
+            backdrop-filter: blur(16px) saturate(1.12);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 22px;
+            transition: background-color .35s var(--ease), border-color .35s var(--ease);
+            animation: card-in .55s var(--ease) both;
+        }
+
+        @keyframes card-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* ---------- Carousel ---------- */
+        .c-carousel {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .carousel {
+            position: relative;
+        }
+
+        .carousel-track {
+            position: relative;
+            min-height: 224px;
+        }
+
+        .carousel-slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 11px;
+            padding: 34px 70px;
+            text-decoration: none;
+            color: var(--ink);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .6s var(--ease), visibility .6s var(--ease);
+        }
+
+        .carousel-slide.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .carousel-name {
+            font-size: 21px;
+            font-weight: 700;
+            line-height: 1.45;
+            letter-spacing: .01em;
+            transition: color .2s var(--ease);
+        }
+
+        .carousel-slide:hover .carousel-name {
+            color: var(--teal);
+        }
+
+        .carousel-info {
+            font-size: 13.5px;
+            color: var(--ink-soft);
+            line-height: 1.85;
+        }
+
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: var(--card-2);
+            color: var(--ink-soft);
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            transition: color .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
+        }
+
+        .carousel-arrow:hover {
+            color: var(--teal);
+            border-color: var(--teal-line);
+        }
+
+        .carousel-arrow.prev {
+            left: 16px;
+        }
+
+        .carousel-arrow.next {
+            right: 16px;
+        }
+
+        .carousel-dots {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 7px;
+            z-index: 3;
+        }
+
+        .carousel-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--line-strong);
+            padding: 0;
+            transition: background-color .25s var(--ease), width .25s var(--ease);
+        }
+
+        .carousel-dot.active {
+            background: var(--teal);
+            width: 22px;
+            border-radius: 4px;
+        }
+
+        /* ---------- Calendar (anniversary week view) ---------- */
+        .cal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .cal-title {
+            font-size: 16px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: .02em;
+        }
+
+        .cal-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .cal-selects {
+            display: flex;
+            gap: 6px;
+        }
+
+        .cal-selects select {
+            height: 36px;
+            padding: 0 28px 0 12px;
+            border-radius: 9px;
+            border: 1px solid var(--line);
+            background-color: var(--card-2);
+            color: var(--ink-soft);
+            font-family: var(--font);
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            transition: color .2s var(--ease), border-color .2s var(--ease);
+        }
+
+        .cal-selects select:hover {
+            color: var(--teal);
+            border-color: var(--teal-line);
+        }
+
+        .cal-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .cal-nav button {
+            height: 36px;
+            padding: 0 16px;
+            border-radius: 9px;
+            border: 1px solid var(--line);
+            background: var(--card-2);
+            color: var(--ink-soft);
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: .04em;
+            transition: color .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
+        }
+
+        .cal-nav button:hover {
+            color: var(--teal);
+            border-color: var(--teal-line);
+            transform: translateY(-1px);
+        }
+
+        .cal-nav .cal-step {
+            width: 36px;
+            padding: 0;
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+        }
+
+        .cal-week {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .cal-day {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--card-2);
+            padding: 10px;
+            min-height: 168px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color .25s var(--ease), box-shadow .25s var(--ease), background-color .25s var(--ease);
+        }
+
+        .cal-day.is-today {
+            border-color: var(--teal-line);
+            box-shadow: inset 0 0 0 1px var(--teal-line);
+        }
+
+        .cal-day.is-selected {
+            background: var(--teal-tint);
+            border-color: var(--teal);
+        }
+
+        .cal-day-head {
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 2px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--line);
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: background-color .2s var(--ease);
+        }
+
+        .cal-day-head:hover {
+            background: color-mix(in srgb, var(--ink) 6%, transparent);
+        }
+
+        .cal-weekday {
+            font-size: 10px;
+            letter-spacing: .12em;
+            color: var(--ink-faint);
+        }
+
+        .cal-datenum {
+            font-size: 21px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.1;
+        }
+
+        .cal-day.is-today .cal-datenum,
+        .cal-day.is-selected .cal-datenum {
+            color: var(--teal);
+        }
+
+        .cal-monthlabel {
+            font-size: 9px;
+            color: var(--ink-faint);
+            letter-spacing: .08em;
+        }
+
+        .cal-holiday {
+            font-size: 8.5px;
+            color: var(--amber);
+            line-height: 1.3;
+            text-align: center;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cal-events {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .cal-event {
+            font-size: 10.5px;
+            line-height: 1.4;
+            padding: 5px 7px;
+            border-radius: 7px;
+            color: #fff;
+            text-decoration: none;
+            display: block;
+            overflow-wrap: anywhere;
+            transition: transform .18s var(--ease), filter .18s var(--ease);
+        }
+
+        .cal-event.is-clickable {
+            cursor: pointer;
+        }
+
+        .cal-event.is-clickable:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.08);
+        }
+
+        /* ---------- Content area ---------- */
+        .bento {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 14px;
+            align-items: start;
+        }
+
+        .left-col {
+            grid-column: span 4;
+            position: sticky;
+            top: calc(var(--nav-h) + 16px);
+            align-self: start;
+            display: grid;
+            gap: 14px;
+            max-height: calc(100vh - var(--nav-h) - 32px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--line-strong) transparent;
+            padding-right: 2px;
+        }
+
+        .c-chart {
+            animation-delay: .02s;
+        }
+
+        .c-filter {
+            animation-delay: .08s;
+        }
+
+        .c-timeline {
+            grid-column: span 8;
+            padding: 22px 22px 8px;
+            animation-delay: .14s;
+        }
+
+        .chart-rows {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 11px;
+        }
+
+        .chart-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-row[data-type="映画"] {
+            border-top: 1px solid var(--line);
+            padding-top: 13px;
+            margin-top: 2px;
+        }
+
+        .chart-label {
+            font-size: 10.5px;
+            letter-spacing: .05em;
+            color: var(--ink-soft);
+            width: 74px;
+            flex-shrink: 0;
+        }
+
+        .chart-row--stat .chart-label {
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        .chart-track {
+            flex: 1;
+            height: 10px;
+            border-radius: 5px;
+            background: var(--card-2);
+            border: 1px solid var(--line);
+            overflow: hidden;
+        }
+
+        .chart-row--stat .chart-track {
+            height: 12px;
+        }
+
+        .chart-fill {
+            display: block;
+            height: 100%;
+            width: 0;
+            border-radius: 5px;
+            background: var(--c);
+            transition: width .5s var(--ease);
+        }
+
+        .chart-num {
+            font-size: 12px;
+            font-weight: 500;
+            width: 3ch;
+            text-align: right;
+            color: var(--ink);
+        }
+
+        .chart-row--stat .chart-num {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .filter-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .filter-btn {
+            font-family: var(--font);
+            font-variant-numeric: tabular-nums;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: .04em;
+            height: 40px;
+            padding: 0 6px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: var(--card-2);
+            color: var(--ink-soft);
+            white-space: nowrap;
+            transition: color .2s var(--ease), background-color .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
+        }
+
+        .filter-btn:hover {
+            color: var(--ink);
+            border-color: var(--line-strong);
+            transform: translateY(-1px);
+        }
+
+        .filter-btn:active {
+            transform: translateY(0) scale(.98);
+        }
+
+        .filter-btn.active {
+            background: var(--teal);
+            border-color: var(--teal);
+            color: var(--on-teal);
+        }
+
+        .filter-btn[data-filter="all"] {
+            grid-column: 1 / -1;
+        }
+
+        .switch-row {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+            display: grid;
+            gap: 12px;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .switch-label {
+            font-size: 12.5px;
+            color: var(--ink-soft);
+            cursor: pointer;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 26px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: var(--card-2);
+            border: 1px solid var(--line-strong);
+            border-radius: 999px;
+            transition: background-color .25s var(--ease), border-color .25s var(--ease);
+        }
+
+        .slider::before {
+            content: "";
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            top: 3px;
+            border-radius: 50%;
+            background: var(--ink-soft);
+            transition: transform .25s var(--ease), background-color .25s var(--ease);
+        }
+
+        .switch input:checked+.slider {
+            background: var(--teal);
+            border-color: var(--teal);
+        }
+
+        .switch input:checked+.slider::before {
+            transform: translateX(20px);
+            background: var(--on-teal);
+        }
+
+        .switch input:focus-visible+.slider {
+            outline: 2px solid var(--teal);
+            outline-offset: 2px;
+        }
+
+        .timeline-year {
+            padding: 18px 0;
+        }
+
+        .year-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .year-label {
+            font-family: var(--font);
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            font-size: 24px;
+            letter-spacing: .04em;
+            line-height: 1;
+            color: var(--ink);
+        }
+
+        .year-now .year-label {
+            color: var(--teal);
+        }
+
+        .year-rule {
+            flex: 1;
+            border-top: 1px solid var(--line);
+        }
+
+        .timeline-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .timeline-item {
+            position: relative;
+            background: var(--card-2);
+            border: 1px solid var(--line);
+            border-radius: 13px;
+            padding: 14px;
+            cursor: pointer;
+            display: grid;
+            min-height: 170px;
+            animation: rise .45s var(--ease) both;
+            transition: transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease), background-color .35s var(--ease);
+        }
+
+        .timeline-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--teal-line);
+            box-shadow: var(--shadow-lift);
+        }
+
+        .timeline-item.lead-role {
+            border-color: var(--line-strong);
+            background: color-mix(in srgb, var(--card-2) 60%, var(--card));
+        }
+
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(9px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .tile-center {
+            grid-area: 1 / 1;
+            align-self: center;
+            justify-self: center;
+            text-align: center;
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .work-title {
+            font-family: var(--font);
+            font-weight: 600;
+            font-size: 15px;
+            line-height: 1.5;
+            letter-spacing: .02em;
+            overflow-wrap: anywhere;
+        }
+
+        .tile-sub {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .work-name {
+            font-size: 11px;
+            color: var(--ink-soft);
+        }
+
+        .badge {
+            font-family: var(--font);
+            font-size: 9px;
+            letter-spacing: .1em;
+            padding: 2.5px 7px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .badge-soon {
+            color: var(--amber);
+            background: var(--amber-tint);
+        }
+
+        .badge-soon i {
+            background: var(--amber);
+        }
+
+        .badge-live {
+            color: var(--teal);
+            background: var(--teal-tint);
+        }
+
+        .badge-live i {
+            background: var(--teal);
+            animation: pulse 2.4s var(--ease) infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .4;
+            }
+        }
+
+        .tile-meta {
+            grid-area: 1 / 1;
+            align-self: end;
+            justify-self: stretch;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            font-family: var(--font);
+            font-variant-numeric: tabular-nums;
+            font-size: 9px;
+            letter-spacing: .1em;
+            padding: 2.5px 7px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            color: var(--ink-soft);
+            white-space: nowrap;
+        }
+
+        .chip-lead {
+            background: var(--ink);
+            color: var(--paper);
+            border-color: var(--ink);
+            font-weight: 500;
+        }
+
+        .tile-date {
+            font-size: 10px;
+            color: var(--ink-faint);
+            letter-spacing: .04em;
+        }
+
+        .skeleton-label,
+        .skeleton-content {
+            background: linear-gradient(90deg, var(--card-2) 25%, var(--line) 50%, var(--card-2) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.6s var(--ease) infinite;
+            border-radius: 8px;
+            color: transparent !important;
+        }
+
+        .skeleton-content {
+            height: 140px;
+        }
+
+        .skeleton-item {
+            cursor: default;
+            animation: none;
+        }
+
+        .skeleton-item:hover {
+            transform: none;
+            border-color: var(--line);
+            box-shadow: none;
+        }
+
+        @keyframes skeleton-loading {
+            from {
+                background-position: 200% 0;
+            }
+
+            to {
+                background-position: -200% 0;
+            }
+        }
+
+        .load-error {
+            padding: 22px 4px;
+            font-size: 12px;
+            color: var(--amber);
+            line-height: 2;
+        }
+
+        .footer {
+            max-width: 1600px;
+            margin: 26px auto 0;
+            padding: 18px 12px 0;
+            border-top: 1px solid var(--line);
+            text-align: center;
+            font-family: var(--font);
+            font-variant-numeric: tabular-nums;
+            font-size: 10px;
+            letter-spacing: .08em;
+            color: var(--ink-faint);
+        }
+
+        .noscript-note {
+            margin: 20px;
+            padding: 20px;
+            font-size: 13px;
+            color: var(--amber);
+        }
+
+        @media (max-width: 1000px) {
+            .left-col {
+                grid-column: span 12;
+                position: static;
+                max-height: none;
+                overflow: visible;
+                grid-template-columns: 1fr 1fr;
+                padding-right: 0;
+            }
+
+            .c-timeline {
+                grid-column: span 12;
+            }
+
+            .cal-week {
+                display: flex;
+                overflow-x: auto;
+                padding-bottom: 6px;
+            }
+
+            .cal-day {
+                flex: 0 0 172px;
+            }
+        }
+
+        @media (max-width: 860px) {
+            :root {
+                --nav-h: 106px;
+            }
+
+            .nav-inner {
+                flex-wrap: wrap;
+                gap: 8px 14px;
+            }
+
+            .nav-links {
+                order: 3;
+                flex-basis: 100%;
+            }
+
+            .nav-ctrl {
+                margin-left: auto;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .left-col {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .c-timeline {
+                padding: 18px 14px 6px;
+            }
+
+            .timeline-items {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .year-label {
+                font-size: 21px;
+            }
+
+            .carousel-slide {
+                padding: 28px 54px;
+            }
+
+            .carousel-name {
+                font-size: 18px;
+            }
+
+            .cal-header {
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .timeline-items {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+            }
+
+            .nav-inner {
+                gap: 8px 10px;
+            }
+
+            .cal-week {
+                flex-direction: column;
+                overflow-x: visible;
+            }
+
+            .cal-day {
+                flex: none;
+                min-height: auto;
+            }
+
+            .cal-day-head {
+                height: 84px;
+            }
+
+            .carousel-track {
+                min-height: 256px;
+            }
+
+            .carousel-slide {
+                padding: 26px 46px;
+            }
+
+            .carousel-arrow {
+                width: 32px;
+                height: 32px;
+            }
+
+            .carousel-arrow.prev {
+                left: 8px;
+            }
+
+            .carousel-arrow.next {
+                right: 8px;
+            }
+
+            .cal-controls {
+                width: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+
+            html {
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="fog" aria-hidden="true"><span class="fog-a"></span><span class="fog-b"></span></div>
+
+    <header class="navbar">
+        <div class="nav-inner">
+            <a class="brand" href="https://skmst.netlify.app" target="_blank"><span
+                    class="brand-name">skmst-db</span></a>
+            <nav class="nav-links" aria-label="サイトナビゲーション">
+
+            </nav>
+            <div class="nav-ctrl">
+                <button type="button" class="nav-btn" id="theme-toggle" aria-label="ライトモードに切り替え"><span class="nav-glyph"
+                        aria-hidden="true">◑</span></button>
+                <button type="button" class="nav-btn" id="btn-top" aria-label="ページ最上部へ戻る"><span class="nav-glyph"
+                        aria-hidden="true">▲</span></button>
+                <button type="button" class="nav-btn" id="btn-end" aria-label="ページ最下部へ移動"><span class="nav-glyph"
+                        aria-hidden="true">▼</span></button>
+            </div>
+        </div>
+    </header>
+
+    <noscript>
+        <div class="card noscript-note">このページの年表・フィルターは JavaScript で動作します。JavaScript を有効にしてください。</div>
+    </noscript>
+
+    <main class="main">
+        <h1 class="sr-only">WORKS — 堺雅人 出演作品年表</h1>
+        <span class="sr-only" role="status" id="a11y-status">作品データを読み込み中…</span>
+
+        <div class="stack">
+            <section class="card c-carousel" aria-label="ピックアップ">
+                <div class="carousel" id="carousel">
+                    <div class="carousel-track" id="carousel-track"></div>
+                    <button type="button" class="carousel-arrow prev" id="carousel-prev" aria-label="前のスライド">◀</button>
+                    <button type="button" class="carousel-arrow next" id="carousel-next" aria-label="次のスライド">▶</button>
+                    <div class="carousel-dots" id="carousel-dots"></div>
+                </div>
+            </section>
+
+            <section class="card c-calendar" aria-label="カレンダー">
+                <div class="cal-header">
+                    <div class="cal-title" id="cal-title"></div>
+                    <div class="cal-controls">
+                        <div class="cal-selects">
+                            <select id="cal-year" aria-label="年"></select>
+                            <select id="cal-month" aria-label="月"></select>
+                            <select id="cal-day" aria-label="日"></select>
+                        </div>
+                        <div class="cal-nav">
+                            <button type="button" class="cal-step" id="cal-prev" aria-label="前の週">◀</button>
+                            <button type="button" id="cal-today">Today</button>
+                            <button type="button" class="cal-step" id="cal-next" aria-label="次の週">▶</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="cal-week" id="cal-week"></div>
+            </section>
+
+            <div class="bento">
+                <div class="left-col">
+                    <section class="card c-chart" aria-label="統計">
+                        <div class="chart-rows">
+                            <div class="chart-row chart-row--stat" data-stat="total">
+                                <span class="chart-label mono">in Total</span>
+                                <span class="chart-track"><span class="chart-fill" style="--c:var(--ink)"></span></span>
+                                <span class="chart-num mono">0</span>
+                            </div>
+                            <div class="chart-row chart-row--stat" data-stat="lead">
+                                <span class="chart-label mono">主演</span>
+                                <span class="chart-track"><span class="chart-fill"
+                                        style="--c:color-mix(in srgb, var(--ink) 72%, transparent)"></span></span>
+                                <span class="chart-num mono">0</span>
+                            </div>
+                            <div class="chart-row chart-row--stat" data-stat="award">
+                                <span class="chart-label mono">個人受賞</span>
+                                <span class="chart-track"><span class="chart-fill"
+                                        style="--c:color-mix(in srgb, var(--ink) 50%, transparent)"></span></span>
+                                <span class="chart-num mono">0</span>
+                            </div>
+                            <div class="chart-row" data-type="映画">
+                                <span class="chart-label mono">映画</span>
+                                <span class="chart-track"><span class="chart-fill"
+                                        style="--c:var(--viz-purple)"></span></span>
+                                <span class="chart-num mono">0</span>
+                            </div>
+                            <div class="chart-row" data-type="TV">
+                                <span class="chart-label mono">TV</span>
+                                <span class="chart-track"><span class="chart-fill"
+                                        style="--c:var(--viz-blue)"></span></span>
+                                <span class="chart-num mono">0</span>
+                            </div>
+                            <div class="chart-row" data-type="舞台">
+                                <span class="chart-label mono">舞台</span>
+                                <span class="chart-track"><span class="chart-fill"
+                                        style="--c:var(--viz-pink)"></span></span>
+                                <span class="chart-num mono">0</span>
+                            </div>
+                            <div class="chart-row" data-type="その他">
+                                <span class="chart-label mono">その他</span>
+                                <span class="chart-track"><span class="chart-fill"
+                                        style="--c:var(--viz-slate)"></span></span>
+                                <span class="chart-num mono">0</span>
+                            </div>
+                            <div class="chart-row" data-type="声の出演">
+                                <span class="chart-label mono">声の出演</span>
+                                <span class="chart-track"><span class="chart-fill"
+                                        style="--c:var(--viz-orange)"></span></span>
+                                <span class="chart-num mono">0</span>
+                            </div>
+                            <div class="chart-row" data-type="BOOK">
+                                <span class="chart-label mono">BOOK</span>
+                                <span class="chart-track"><span class="chart-fill"
+                                        style="--c:var(--viz-indigo)"></span></span>
+                                <span class="chart-num mono">0</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card c-filter" aria-label="絞り込み">
+                        <div class="filter-buttons">
+                            <button type="button" class="filter-btn active" data-filter="all">全て</button>
+                            <button type="button" class="filter-btn" data-filter="映画">映画</button>
+                            <button type="button" class="filter-btn" data-filter="TV">TV</button>
+                            <button type="button" class="filter-btn" data-filter="舞台">舞台</button>
+                            <button type="button" class="filter-btn" data-filter="その他">その他</button>
+                            <button type="button" class="filter-btn" data-filter="声の出演">声の出演</button>
+                            <button type="button" class="filter-btn" data-filter="BOOK">BOOK</button>
+                        </div>
+                        <div class="switch-row">
+                            <div class="switch-container">
+                                <label class="switch-label" for="lead-role-toggle">主演作品</label>
+                                <label class="switch"><input type="checkbox" id="lead-role-toggle"><span
+                                        class="slider"></span></label>
+                            </div>
+                            <div class="switch-container">
+                                <label class="switch-label" for="award-toggle">個人受賞作品</label>
+                                <label class="switch"><input type="checkbox" id="award-toggle"><span
+                                        class="slider"></span></label>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="card c-timeline" aria-label="作品年表">
+                    <div class="timeline-container" id="timeline-container">
+                        <div class="timeline-year skeleton-year" aria-hidden="true">
+                            <div class="year-head"><span class="year-label skeleton-label">0000</span><span
+                                    class="year-rule"></span></div>
+                            <div class="timeline-items">
+                                <div class="timeline-item skeleton-item">
+                                    <div class="skeleton-content"></div>
+                                </div>
+                                <div class="timeline-item skeleton-item">
+                                    <div class="skeleton-content"></div>
+                                </div>
+                                <div class="timeline-item skeleton-item">
+                                    <div class="skeleton-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-year skeleton-year" aria-hidden="true">
+                            <div class="year-head"><span class="year-label skeleton-label">0000</span><span
+                                    class="year-rule"></span></div>
+                            <div class="timeline-items">
+                                <div class="timeline-item skeleton-item">
+                                    <div class="skeleton-content"></div>
+                                </div>
+                                <div class="timeline-item skeleton-item">
+                                    <div class="skeleton-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <footer class="footer" id="page-end">
+            <p>© H2COL All Rights Reserved.</p>
+            <p>This site is NOT an official site, with NO affiliation with Mr. Sakai Masato or his management.</p>
+        </footer>
+    </main>
+
+    <script src="js/schedule.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const motionOK = () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const THEME_KEY = 'skmst-theme';
+
+            (function highlightCurrentPage() {
+                const normalize = (p) => !p ? '' : p.split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/, '');
+                const current = normalize(window.location.pathname) || 'works';
+                document.querySelectorAll('.nav-links a').forEach(link => {
+                    const target = normalize(link.getAttribute('href'));
+                    if (current === target || ((current === 'about' || current === 'contact') && target === 'about')) {
+                        link.classList.add('active'); link.setAttribute('aria-current', 'page');
+                    } else { link.classList.remove('active'); link.removeAttribute('aria-current'); }
+                });
+            })();
+
+            const themeBtn = document.getElementById('theme-toggle');
+            const metaTheme = document.querySelector('meta[name="theme-color"]');
+            function renderTheme(t) {
+                document.documentElement.setAttribute('data-theme', t);
+                const dark = t === 'dark';
+                themeBtn.setAttribute('aria-label', dark ? 'ライトモードに切り替え' : 'ダークモードに切り替え');
+                if (metaTheme) metaTheme.setAttribute('content', dark ? '#131311' : '#F2F0EA');
+            }
+            renderTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+            themeBtn.addEventListener('click', () => {
+                const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                try { localStorage.setItem(THEME_KEY, next); } catch (e) { }
+                renderTheme(next);
+            });
+            window.addEventListener('storage', (e) => {
+                if (e.key === THEME_KEY && (e.newValue === 'light' || e.newValue === 'dark')) renderTheme(e.newValue);
+            });
+            document.getElementById('btn-top').addEventListener('click', () => window.scrollTo({ top: 0, behavior: motionOK() ? 'smooth' : 'auto' }));
+            document.getElementById('btn-end').addEventListener('click', () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: motionOK() ? 'smooth' : 'auto' }));
+
+            /* ================= Carousel ================= */
+            const SLIDES = [
+                { name: 'PARCO PRODUCE 舞台『スリーゴースト』', info: '2026年10月 PARCO劇場<br>2026年11-12月 全国ツアー（大阪、福岡、愛知、岡山、宮崎）', url: 'https://stage.parco.jp/program/threeghosts/' },
+                { name: '映画『南極料理人 4Kリマスター』', info: '🍜2026年11月13日(金)公開🍜', url: 'https://www.theatres.co.jp/service/distribution/nankyoku-ryori/' },
+                { name: '映画『VIVANT』', info: '2026年12月4日(金) IN THEATER IMAX同時公開', url: 'https://vivant.toho-movie.jp/' },
+                { name: '「第77回 NHK紅白歌合戦」 🟥司会⬜️', info: '📅2026年12月31日 (木) 19:20~23:45', url: 'https://www.nhk.or.jp/kouhaku/mc77/mc_1.html' },
+                { name: 'VIVANT 第2シーズン Blu-ray&DVD📀', info: '2027年3月3日(水) 発売', url: 'https://sp.tc-ent.co.jp/vivant_link/' }
+            ];
+            (function initCarousel() {
+                const track = document.getElementById('carousel-track');
+                const dotsWrap = document.getElementById('carousel-dots');
+                const carousel = document.getElementById('carousel');
+                if (!track) return;
+                const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                let idx = 0, timer = null;
+                SLIDES.forEach((s, i) => {
+                    const a = document.createElement('a');
+                    a.className = 'carousel-slide' + (i === 0 ? ' active' : '');
+                    a.href = s.url; a.target = '_blank'; a.rel = 'noopener';
+                    const name = document.createElement('div'); name.className = 'carousel-name'; name.textContent = s.name;
+                    const info = document.createElement('div'); info.className = 'carousel-info'; info.innerHTML = s.info;
+                    a.appendChild(name); a.appendChild(info); track.appendChild(a);
+                    const dot = document.createElement('button');
+                    dot.type = 'button'; dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                    dot.setAttribute('aria-label', `スライド${i + 1}`);
+                    dot.addEventListener('click', () => { go(i); start(); });
+                    dotsWrap.appendChild(dot);
+                });
+                const slides = Array.from(track.children);
+                const dots = Array.from(dotsWrap.children);
+                function go(n) {
+                    idx = (n + SLIDES.length) % SLIDES.length;
+                    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+                    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+                }
+                function stop() { if (timer) { clearInterval(timer); timer = null; } }
+                function start() { stop(); if (!reduce) timer = setInterval(() => go(idx + 1), 5000); }
+                document.getElementById('carousel-next').addEventListener('click', () => { go(idx + 1); start(); });
+                document.getElementById('carousel-prev').addEventListener('click', () => { go(idx - 1); start(); });
+                carousel.addEventListener('mouseenter', stop);
+                carousel.addEventListener('mouseleave', start);
+                carousel.addEventListener('focusin', stop);
+                carousel.addEventListener('focusout', start);
+                start();
+            })();
+
+            /* ================= Calendar: anniversary week view ================= */
+            const special_memo = [
+                { name: '乃木憂助の誕生日', month: 0, day: 25, startYear: 2024, url: 'https://h2col.notion.site/1b68a08476c780e78f0fe8e8e8441e1b' },
+                { name: '伊達一義の誕生日', month: 5, day: 29, startYear: 2011, url: 'https://h2col.notion.site/1b68a08476c780caa667e03f4ffdffb8' },
+                { name: '木村一樹の誕生日', month: 9, day: 11, startYear: 2008, url: 'https://h2col.notion.site/1b68a08476c78015ab14f23054250d11' },
+                { name: '半沢直樹の誕生日', month: 11, day: 8, startYear: 2013, url: 'https://h2col.notion.site/1b68a08476c7804dba68d1ae0ae9e9cc' }
+            ];
+            function calculateSakaiMilestones(year, month) {
+                const milestones = [];
+                const startDate = createJSTDate(SAKAI_BIRTH.year, SAKAI_BIRTH.month, SAKAI_BIRTH.day);
+                const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+                for (let d = 1; d <= lastDay; d++) {
+                    const cur = createJSTDate(year, month, d);
+                    const dayCount = Math.floor((cur.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                    if (dayCount > 0 && dayCount % 100 === 0) {
+                        milestones.push({ startDate: cur, endDate: cur, title: `${dayCount}th`, url: 'https://sakai-masato.com/', source: 'sakai-milestone' });
+                    }
+                }
+                return milestones;
+            }
+            function formatAnniversaryEvent(event) {
+                if (event.source !== 'anniversary') return event;
+                let title = event.originalTitle || '';
+                const color = (event.role === '主演') ? '#5474a1' : '#889063';
+                if (event.anniversaryType === 'start') title += ` 【${event.diffValue}周年】`;
+                else if (event.anniversaryType === 'end') title += ` 【終了-${event.diffValue}周年】`;
+                else if (event.anniversaryType === 'days_start') title += ` 【${event.diffValue}日前】`;
+                else if (event.anniversaryType === 'days_end') title += ` 【終了-${event.diffValue}日前】`;
+                return { ...event, title, color };
+            }
+            function sourceColor(ev) {
+                switch (ev.source) {
+                    case 'main': return { bg: 'rgba(52, 152, 219, 0.8)', text: '#ffffff' };
+                    case 'other': return { bg: 'rgba(241, 196, 15, 0.8)', text: '#26241F' };
+                    case 'sakai-birthday':
+                    case 'sakai-milestone': return { bg: 'rgba(46, 204, 113, 0.8)', text: '#ffffff' };
+                    case 'special_memo': return { bg: '#43AA8B', text: '#ffffff' };
+                    case 'anniversary': return { bg: ev.color || '#889063', text: '#ffffff' };
+                    case 'syukujitsu': return { bg: '#FFD1D1', text: '#c0392b' };
+                    default: return { bg: 'rgba(52, 152, 219, 0.8)', text: '#ffffff' };
+                }
+            }
+            (async function initCalendar() {
+                const weekEl = document.getElementById('cal-week');
+                const titleEl = document.getElementById('cal-title');
+                const yearSel = document.getElementById('cal-year');
+                const monthSel = document.getElementById('cal-month');
+                const daySel = document.getElementById('cal-day');
+                if (!weekEl) return;
+                let bio = [], holidays = [], otherEvents = [];
+                try {
+                    [bio, holidays, otherEvents] = await Promise.all([
+                        fetchBiographyCSV(),
+                        parseSyukujitsuCSV(),
+                        parseOtherCSV()
+                    ]);
+                } catch (e) { console.error('Calendar data error:', e); }
+                const annCache = new Map(), mileCache = new Map();
+                const midnight = (d) => createJSTDate(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+                const mondayOf = (d) => { const m = midnight(d); const dow = m.getUTCDay(); const diff = (dow === 0 ? 6 : dow - 1); return createJSTDate(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate() - diff); };
+                const daysInMonth = (Y, M) => new Date(Date.UTC(Y, M + 1, 0)).getUTCDate();
+                let selectedDate = getJSTMidnight();
+                let weekStart = mondayOf(selectedDate);
+
+                const getAnn = (Y, M) => { const k = Y + '-' + M; if (!annCache.has(k)) annCache.set(k, calculateAnniversaries(bio, Y, M).map(formatAnniversaryEvent)); return annCache.get(k); };
+                const getMile = (Y, M) => { const k = Y + '-' + M; if (!mileCache.has(k)) mileCache.set(k, calculateSakaiMilestones(Y, M)); return mileCache.get(k); };
+                function eventsForDay(d) {
+                    const Y = d.getUTCFullYear(), M = d.getUTCMonth(), D = d.getUTCDate();
+                    const out = [];
+                    bio.forEach(e => { if (isEventActiveOnDate(e, d)) out.push({ title: e.title || e.name, url: e.url, source: 'main' }); });
+                    otherEvents.forEach(e => { if (isSameJSTDay(e.startDate, d)) out.push({ title: e.title, url: e.url, source: 'other' }); });
+                    getMile(Y, M).forEach(m => { if (isSameJSTDay(m.startDate, d)) out.push({ title: m.title, url: m.url, source: 'sakai-milestone' }); });
+                    special_memo.forEach(b => { if (Y >= b.startYear && b.month === M && b.day === D) out.push({ title: b.name, url: b.url, source: 'special_memo' }); });
+                    if (M === SAKAI_BIRTH.month && D === SAKAI_BIRTH.day) out.push({ title: '堺さんの誕生日 🎂', url: 'https://sakai-masato.com/', source: 'sakai-birthday' });
+                    getAnn(Y, M).forEach(a => { if (isSameJSTDay(a.startDate, d)) out.push({ title: a.title, url: a.url, source: 'anniversary', color: a.color }); });
+                    return out;
+                }
+                function rangeLabel(a, b) {
+                    const ay = a.getUTCFullYear(), by = b.getUTCFullYear(), am = a.getUTCMonth() + 1, bm = b.getUTCMonth() + 1;
+                    if (ay === by && am === bm) return `${ay}年${am}月${a.getUTCDate()}日 – ${b.getUTCDate()}日`;
+                    if (ay === by) return `${ay}年${am}月${a.getUTCDate()}日 – ${bm}月${b.getUTCDate()}日`;
+                    return `${ay}年${am}月${a.getUTCDate()}日 – ${by}年${bm}月${b.getUTCDate()}日`;
+                }
+                function buildDays() {
+                    const Y = parseInt(yearSel.value, 10), M = parseInt(monthSel.value, 10);
+                    const dim = daysInMonth(Y, M);
+                    const prev = parseInt(daySel.value, 10) || 1;
+                    daySel.innerHTML = '';
+                    for (let d = 1; d <= dim; d++) { const o = document.createElement('option'); o.value = d; o.textContent = d + '日'; daySel.appendChild(o); }
+                    daySel.value = Math.min(prev, dim);
+                }
+                function syncSelectors() {
+                    yearSel.value = selectedDate.getUTCFullYear();
+                    monthSel.value = selectedDate.getUTCMonth();
+                    buildDays();
+                    daySel.value = selectedDate.getUTCDate();
+                }
+                function buildSelectors() {
+                    const cy = getJSTYear();
+                    yearSel.innerHTML = '';
+                    for (let y = cy + 3; y >= 1992; y--) { const o = document.createElement('option'); o.value = y; o.textContent = y + '年'; yearSel.appendChild(o); }
+                    monthSel.innerHTML = '';
+                    for (let m = 0; m < 12; m++) { const o = document.createElement('option'); o.value = m; o.textContent = (m + 1) + '月'; monthSel.appendChild(o); }
+                    syncSelectors();
+                }
+                function setSelected(date) {
+                    selectedDate = midnight(date);
+                    weekStart = mondayOf(selectedDate);
+                    syncSelectors();
+                    render();
+                }
+                function render() {
+                    const days = Array.from({ length: 7 }, (_, i) => createJSTDate(weekStart.getUTCFullYear(), weekStart.getUTCMonth(), weekStart.getUTCDate() + i));
+                    const today = getJSTMidnight();
+                    titleEl.textContent = rangeLabel(days[0], days[6]);
+                    weekEl.innerHTML = '';
+                    const wd = ['月', '火', '水', '木', '金', '土', '日'];
+                    days.forEach((d, i) => {
+                        const col = document.createElement('div');
+                        col.className = 'cal-day';
+                        if (isSameJSTDay(d, today)) col.classList.add('is-today');
+                        if (isSameJSTDay(d, selectedDate)) col.classList.add('is-selected');
+                        const head = document.createElement('div'); head.className = 'cal-day-head';
+                        head.setAttribute('role', 'button'); head.tabIndex = 0;
+                        head.setAttribute('aria-label', formatJSTDateJapanese(d));
+                        head.addEventListener('click', () => setSelected(d));
+                        head.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(d); } });
+                        const w = document.createElement('div'); w.className = 'cal-weekday'; w.textContent = wd[i];
+                        const num = document.createElement('div'); num.className = 'cal-datenum'; num.textContent = d.getUTCDate();
+                        head.appendChild(w); head.appendChild(num);
+                        if (d.getUTCDate() === 1 || i === 0) { const ml = document.createElement('div'); ml.className = 'cal-monthlabel'; ml.textContent = (d.getUTCMonth() + 1) + '月'; head.appendChild(ml); }
+                        const hol = holidays.find(h => isSameJSTDay(h.startDate, d));
+                        if (hol) { const h = document.createElement('div'); h.className = 'cal-holiday'; h.textContent = hol.title; head.appendChild(h); }
+                        col.appendChild(head);
+                        const wrap = document.createElement('div'); wrap.className = 'cal-events';
+                        eventsForDay(d).forEach(ev => {
+                            const hasUrl = ev.url && ev.url !== '#' && ev.url !== '';
+                            const c = document.createElement(hasUrl ? 'a' : 'div');
+                            c.className = 'cal-event';
+                            if (hasUrl) { c.href = ev.url; c.target = '_blank'; c.rel = 'noopener'; c.classList.add('is-clickable'); }
+                            const clr = sourceColor(ev);
+                            c.style.backgroundColor = clr.bg; c.style.color = clr.text;
+                            c.textContent = ev.title;
+                            wrap.appendChild(c);
+                        });
+                        col.appendChild(wrap);
+                        weekEl.appendChild(col);
+                    });
+                }
+                function onYearMonthChange() {
+                    const Y = parseInt(yearSel.value, 10), M = parseInt(monthSel.value, 10);
+                    const D = Math.min(parseInt(daySel.value, 10) || 1, daysInMonth(Y, M));
+                    setSelected(createJSTDate(Y, M, D));
+                }
+                yearSel.addEventListener('change', onYearMonthChange);
+                monthSel.addEventListener('change', onYearMonthChange);
+                daySel.addEventListener('change', () => setSelected(createJSTDate(parseInt(yearSel.value, 10), parseInt(monthSel.value, 10), parseInt(daySel.value, 10))));
+                document.getElementById('cal-prev').addEventListener('click', () => setSelected(createJSTDate(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate() - 7)));
+                document.getElementById('cal-next').addEventListener('click', () => setSelected(createJSTDate(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate() + 7)));
+                document.getElementById('cal-today').addEventListener('click', () => setSelected(getJSTNow()));
+                buildSelectors();
+                render();
+            })();
+
+            /* ================= Works timeline ================= */
+            let allWorks = [];
+            let currentTypeFilter = 'all';
+            let isLeadFilterActive = false;
+            let isAwardFilterActive = false;
+
+            await loadData();
+
+            function hasUwasaFlag(noteText) { return /(^|[\s,;|])uwasa($|[\s,;|])/i.test(noteText || ''); }
+            function hasMemoFlag(noteText) { return /(^|[\s,;|])memo($|[\s,;|])/i.test(noteText || ''); }
+            function extractYearFromNote(noteText) {
+                if (!noteText) return 0;
+                const normalized = noteText.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+                const matches = normalized.match(/(?:19|20)\d{2}/g);
+                if (!matches || matches.length === 0) return 0;
+                return Math.max(...matches.map(y => parseInt(y, 10)));
+            }
+            async function loadData() {
+                try {
+                    const rows = await fetchBiographyRows();
+                    allWorks = rows.map(row => {
+                        const note = row.Note || '';
+                        if (hasUwasaFlag(note) || hasMemoFlag(note)) return null;
+                        const dateStart = parseJSTDate((row.DateStart || '').trim());
+                        let year = 0;
+                        if (dateStart) year = dateStart.getUTCFullYear();
+                        else { const nt = row.Note || ''; if (nt && !hasUwasaFlag(nt)) year = extractYearFromNote(nt); }
+                        const dateEnd = parseJSTDate((row.DateEnd || '').trim());
+                        let effEnd = (dateEnd && dateStart && dateEnd > dateStart) ? dateEnd : null;
+                        (row.DateAdd || '').split(',').forEach(s => {
+                            const d = parseJSTDate(s.trim());
+                            if (d && !isNaN(d.getTime()) && dateStart && d >= dateStart && (!effEnd || d > effEnd)) effEnd = d;
+                        });
+                        return { year, name: row.Name || '', title: row.Title || '', role: row.Role || '', type: row.WorksType || '', dateStart, url: row.URL ? row.URL.trim() : '#', award: row.Award || '', effEnd };
+                    }).filter(work => work && work.year > 0);
+
+                    allWorks.sort((a, b) => {
+                        if (a.year !== b.year) return b.year - a.year;
+                        if (a.dateStart && b.dateStart) return a.dateStart.getTime() - b.dateStart.getTime();
+                        return 0;
+                    });
+
+                    generateTimeline(allWorks);
+                    setupFilterButtons();
+                    const st = document.getElementById('a11y-status');
+                    if (st) st.textContent = `作品データを読み込みました（${allWorks.length}件）。`;
+                } catch (error) { console.error('Error loading data:', error); showLoadError(); }
+            }
+            function showLoadError() {
+                document.getElementById('timeline-container').innerHTML = '<div class="load-error">/data/biography.csv を取得できません。サイトルート（https://skmst-db.github.io/works.html）経由でアクセスしてください。</div>';
+                const st = document.getElementById('a11y-status');
+                if (st) st.textContent = '作品データの読み込みに失敗しました。';
+            }
+            function setupFilterButtons() {
+                const filterButtons = document.querySelectorAll('.filter-btn');
+                const typeFilters = ['all', '映画', 'TV', '舞台', '声の出演', 'その他', 'BOOK'];
+                const leadToggle = document.getElementById('lead-role-toggle');
+                const awardToggle = document.getElementById('award-toggle');
+                function updateAllButtonState() {
+                    if (isLeadFilterActive || isAwardFilterActive) {
+                        filterButtons.forEach(b => { if (b.dataset.filter === 'all') b.classList.remove('active'); });
+                    } else if (currentTypeFilter === 'all') {
+                        filterButtons.forEach(b => { if (b.dataset.filter === 'all') b.classList.add('active'); });
+                    }
+                }
+                if (leadToggle) leadToggle.addEventListener('change', (e) => { isLeadFilterActive = e.target.checked; updateAllButtonState(); applyFilters(); });
+                if (awardToggle) awardToggle.addEventListener('change', (e) => { isAwardFilterActive = e.target.checked; updateAllButtonState(); applyFilters(); });
+                filterButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const filter = btn.dataset.filter;
+                        if (filter === 'all') {
+                            currentTypeFilter = 'all'; isLeadFilterActive = false; isAwardFilterActive = false;
+                            if (leadToggle) leadToggle.checked = false;
+                            if (awardToggle) awardToggle.checked = false;
+                            filterButtons.forEach(b => b.classList.remove('active')); btn.classList.add('active');
+                        } else if (typeFilters.includes(filter)) {
+                            currentTypeFilter = filter;
+                            filterButtons.forEach(b => { if (typeFilters.includes(b.dataset.filter)) b.classList.remove('active'); });
+                            btn.classList.add('active');
+                            filterButtons.forEach(b => { if (b.dataset.filter === 'all') b.classList.remove('active'); });
+                        }
+                        applyFilters();
+                    });
+                });
+            }
+            function applyFilters() {
+                let filteredWorks = allWorks;
+                if (currentTypeFilter !== 'all') filteredWorks = filteredWorks.filter(w => w.type === currentTypeFilter);
+                if (isLeadFilterActive) filteredWorks = filteredWorks.filter(w => w.role && w.role.includes('主演'));
+                if (isAwardFilterActive) filteredWorks = filteredWorks.filter(w => w.award && w.award.trim() !== '');
+                generateTimeline(filteredWorks);
+            }
+            async function generateTimeline(works) {
+                renderChart(works);
+                const worksByYear = {};
+                works.forEach(work => { if (!worksByYear[work.year]) worksByYear[work.year] = []; worksByYear[work.year].push(work); });
+                const currentYear = getJSTNow().getUTCFullYear();
+                const maxYearInData = Math.max(...allWorks.map(w => w.year));
+                const endYear = Math.max(currentYear, maxYearInData);
+                const startYear = 1992;
+                const yearsToRender = [];
+                for (let y = endYear; y >= startYear; y--) yearsToRender.push(y);
+                const yearSectionsData = yearsToRender.map(year => ({ year, works: worksByYear[year] || [] }));
+                const timelineContainer = document.getElementById('timeline-container');
+                timelineContainer.innerHTML = '';
+                await renderTimelineProgressively(yearSectionsData, timelineContainer);
+            }
+            function createYearSection(yearData) {
+                const { year, works } = yearData;
+                const today = getJSTMidnight();
+                const currentYear = getJSTNow().getUTCFullYear();
+                const yearDiv = document.createElement('div');
+                yearDiv.className = 'timeline-year'; yearDiv.id = 'y' + year;
+                if (year === currentYear) yearDiv.classList.add('year-now');
+                const head = document.createElement('div'); head.className = 'year-head';
+                const yearLabel = document.createElement('div'); yearLabel.className = 'year-label'; yearLabel.textContent = year;
+                head.appendChild(yearLabel);
+                const rule = document.createElement('span'); rule.className = 'year-rule'; head.appendChild(rule);
+                yearDiv.appendChild(head);
+                const itemsDiv = document.createElement('div'); itemsDiv.className = 'timeline-items';
+                if (works && works.length > 0) {
+                    works.forEach((work, index) => {
+                        const isLead = work.role && work.role.includes('主演');
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = `timeline-item ${isLead ? 'lead-role' : 'non-lead-role'}`;
+                        itemDiv.style.animationDelay = `${index * 0.1}s`;
+                        itemDiv.onclick = () => window.open(work.url, '_blank');
+                        itemDiv.tabIndex = 0; itemDiv.setAttribute('role', 'link');
+                        itemDiv.setAttribute('aria-label', `${work.title || work.name}${work.name && work.title ? '／' + work.name : ''}（${work.year}）— リンクを新しいタブで開く`);
+                        itemDiv.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); itemDiv.click(); } });
+                        const center = document.createElement('div'); center.className = 'tile-center';
+                        const titleDiv = document.createElement('div'); titleDiv.className = 'work-title'; titleDiv.textContent = work.title || work.name;
+                        center.appendChild(titleDiv);
+                        const hasName = !!(work.name && work.title);
+                        const isUpcoming = work.dateStart && work.dateStart.getTime() > today.getTime();
+                        const isOngoing = work.dateStart && work.effEnd && work.dateStart.getTime() <= today.getTime() && today.getTime() <= work.effEnd.getTime();
+                        if (hasName || isUpcoming || isOngoing) {
+                            const sub = document.createElement('div'); sub.className = 'tile-sub';
+                            if (hasName) { const ns = document.createElement('span'); ns.className = 'work-name'; ns.textContent = work.name; sub.appendChild(ns); }
+                            if (isUpcoming) { const b = document.createElement('span'); b.className = 'badge badge-soon'; b.innerHTML = '<i></i>upcoming'; sub.appendChild(b); }
+                            else if (isOngoing) { const b = document.createElement('span'); b.className = 'badge badge-live'; b.innerHTML = '<i></i>running'; sub.appendChild(b); }
+                            center.appendChild(sub);
+                        }
+                        itemDiv.appendChild(center);
+                        const meta = document.createElement('div'); meta.className = 'tile-meta';
+                        if (isLead) { const lead = document.createElement('span'); lead.className = 'chip chip-lead'; lead.textContent = '主演'; meta.appendChild(lead); }
+                        if (work.type) { const type = document.createElement('span'); type.className = 'chip'; type.textContent = work.type; meta.appendChild(type); }
+                        const date = document.createElement('span'); date.className = 'tile-date mono'; date.textContent = formatWorkRange(work); meta.appendChild(date);
+                        itemDiv.appendChild(meta);
+                        itemsDiv.appendChild(itemDiv);
+                    });
+                }
+                yearDiv.appendChild(itemsDiv);
+                return yearDiv;
+            }
+            function formatWorkRange(work) {
+                if (!work.dateStart) return '日付不明';
+                const s = formatDate(work.dateStart);
+                if (work.effEnd) {
+                    const e = work.effEnd;
+                    const sameYear = e.getUTCFullYear() === work.dateStart.getUTCFullYear();
+                    const endStr = sameYear ? `${String(e.getUTCMonth() + 1).padStart(2, '0')}/${String(e.getUTCDate()).padStart(2, '0')}` : formatDate(e);
+                    return `${s} – ${endStr}`;
+                }
+                return s;
+            }
+            function renderTimelineProgressively(yearSectionsData, container) {
+                return new Promise((resolve) => {
+                    const BATCH_SIZE = 3;
+                    let currentIndex = 0;
+                    function renderBatch() {
+                        const endIndex = Math.min(currentIndex + BATCH_SIZE, yearSectionsData.length);
+                        for (let i = currentIndex; i < endIndex; i++) container.appendChild(createYearSection(yearSectionsData[i]));
+                        currentIndex = endIndex;
+                        if (currentIndex < yearSectionsData.length) requestAnimationFrame(renderBatch);
+                        else resolve();
+                    }
+                    renderBatch();
+                });
+            }
+            function renderChart(works) {
+                const total = works.length;
+                const lead = works.filter(w => w.role && w.role.includes('主演')).length;
+                const award = works.filter(w => w.award && w.award.trim() !== '').length;
+                const statValues = { total, lead, award };
+                const typeCounts = {};
+                document.querySelectorAll('.chart-row[data-type]').forEach(r => { typeCounts[r.dataset.type] = 0; });
+                works.forEach(w => { if (w.type in typeCounts) typeCounts[w.type]++; });
+                const denom = Math.max(1, total);
+                document.querySelectorAll('.chart-row').forEach(r => {
+                    const value = r.dataset.stat ? (statValues[r.dataset.stat] || 0) : (typeCounts[r.dataset.type] || 0);
+                    r.querySelector('.chart-fill').style.width = (value / denom * 100) + '%';
+                    r.querySelector('.chart-num').textContent = value;
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
