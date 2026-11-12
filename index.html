@@ -882,11 +882,11 @@
             padding-right: 2px;
         }
 
-        .c-chart {
+        .c-filter {
             animation-delay: .02s;
         }
 
-        .c-filter {
+        .c-chart {
             animation-delay: .08s;
         }
 
@@ -1344,15 +1344,21 @@
 
         @media (max-width: 1000px) {
             .left-col {
+                display: contents;
+            }
+
+            .c-filter {
+                order: 1;
                 grid-column: span 12;
-                position: static;
-                max-height: none;
-                overflow: visible;
-                grid-template-columns: 1fr 1fr;
-                padding-right: 0;
             }
 
             .c-timeline {
+                order: 2;
+                grid-column: span 12;
+            }
+
+            .c-chart {
+                order: 3;
                 grid-column: span 12;
             }
 
@@ -1388,10 +1394,6 @@
         }
 
         @media (max-width: 720px) {
-            .left-col {
-                grid-template-columns: 1fr;
-            }
-
             .card {
                 padding: 18px;
             }
@@ -1560,6 +1562,35 @@
 
             <div class="bento">
                 <div class="left-col">
+                    <section class="card c-filter" aria-label="絞り込み">
+                        <div class="filter-buttons">
+                            <button type="button" class="filter-btn active" data-filter="all">全て</button>
+                            <button type="button" class="filter-btn" data-filter="映画">映画</button>
+                            <button type="button" class="filter-btn" data-filter="TV">TV</button>
+                            <button type="button" class="filter-btn" data-filter="舞台">舞台</button>
+                            <button type="button" class="filter-btn" data-filter="その他">その他</button>
+                            <button type="button" class="filter-btn" data-filter="声の出演">声の出演</button>
+                            <button type="button" class="filter-btn" data-filter="BOOK">BOOK</button>
+                        </div>
+                        <div class="switch-row">
+                            <div class="switch-container">
+                                <label class="switch-label" for="lead-role-toggle">主演作品</label>
+                                <label class="switch"><input type="checkbox" id="lead-role-toggle"><span
+                                        class="slider"></span></label>
+                            </div>
+                            <div class="switch-container">
+                                <label class="switch-label" for="award-toggle">個人受賞作品</label>
+                                <label class="switch"><input type="checkbox" id="award-toggle"><span
+                                        class="slider"></span></label>
+                            </div>
+                            <div class="switch-container">
+                                <label class="switch-label" for="year-group-toggle">年別表示</label>
+                                <label class="switch"><input type="checkbox" id="year-group-toggle" checked><span
+                                        class="slider"></span></label>
+                            </div>
+                        </div>
+                    </section>
+
                     <section class="card c-chart" aria-label="統計">
                         <div class="chart-rows">
                             <div class="chart-row chart-row--stat" data-stat="total">
@@ -1614,35 +1645,6 @@
                                 <span class="chart-track"><span class="chart-fill"
                                         style="--c:var(--viz-indigo)"></span></span>
                                 <span class="chart-num mono">0</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="card c-filter" aria-label="絞り込み">
-                        <div class="filter-buttons">
-                            <button type="button" class="filter-btn active" data-filter="all">全て</button>
-                            <button type="button" class="filter-btn" data-filter="映画">映画</button>
-                            <button type="button" class="filter-btn" data-filter="TV">TV</button>
-                            <button type="button" class="filter-btn" data-filter="舞台">舞台</button>
-                            <button type="button" class="filter-btn" data-filter="その他">その他</button>
-                            <button type="button" class="filter-btn" data-filter="声の出演">声の出演</button>
-                            <button type="button" class="filter-btn" data-filter="BOOK">BOOK</button>
-                        </div>
-                        <div class="switch-row">
-                            <div class="switch-container">
-                                <label class="switch-label" for="lead-role-toggle">主演作品</label>
-                                <label class="switch"><input type="checkbox" id="lead-role-toggle"><span
-                                        class="slider"></span></label>
-                            </div>
-                            <div class="switch-container">
-                                <label class="switch-label" for="award-toggle">個人受賞作品</label>
-                                <label class="switch"><input type="checkbox" id="award-toggle"><span
-                                        class="slider"></span></label>
-                            </div>
-                            <div class="switch-container">
-                                <label class="switch-label" for="year-group-toggle">年別表示</label>
-                                <label class="switch"><input type="checkbox" id="year-group-toggle" checked><span
-                                        class="slider"></span></label>
                             </div>
                         </div>
                     </section>
