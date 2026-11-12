@@ -2047,7 +2047,7 @@
 
             /* ================= Works timeline ================= */
             let allWorks = [];
-            let currentTypeFilter = 'all';
+            let selectedTypes = new Set();
             let isLeadFilterActive = false;
             let isAwardFilterActive = false;
             let isGroupByYear = true;
@@ -2106,10 +2106,10 @@
                 const awardToggle = document.getElementById('award-toggle');
                 const yearGroupToggle = document.getElementById('year-group-toggle');
                 function updateAllButtonState() {
-                    if (isLeadFilterActive || isAwardFilterActive) {
-                        filterButtons.forEach(b => { if (b.dataset.filter === 'all') b.classList.remove('active'); });
-                    } else if (currentTypeFilter === 'all') {
-                        filterButtons.forEach(b => { if (b.dataset.filter === 'all') b.classList.add('active'); });
+                    const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
+                    if (allBtn) {
+                        const isAll = (selectedTypes.size === 0 && !isLeadFilterActive && !isAwardFilterActive);
+                        allBtn.classList.toggle('active', isAll);
                     }
                 }
                 if (leadToggle) leadToggle.addEventListener('change', (e) => { isLeadFilterActive = e.target.checked; updateAllButtonState(); applyFilters(); });
@@ -2119,15 +2119,21 @@
                     btn.addEventListener('click', () => {
                         const filter = btn.dataset.filter;
                         if (filter === 'all') {
-                            currentTypeFilter = 'all'; isLeadFilterActive = false; isAwardFilterActive = false;
+                            selectedTypes.clear();
+                            isLeadFilterActive = false;
+                            isAwardFilterActive = false;
                             if (leadToggle) leadToggle.checked = false;
                             if (awardToggle) awardToggle.checked = false;
-                            filterButtons.forEach(b => b.classList.remove('active')); btn.classList.add('active');
+                            filterButtons.forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
                         } else if (typeFilters.includes(filter)) {
-                            currentTypeFilter = filter;
-                            filterButtons.forEach(b => { if (typeFilters.includes(b.dataset.filter)) b.classList.remove('active'); });
-                            btn.classList.add('active');
-                            filterButtons.forEach(b => { if (b.dataset.filter === 'all') b.classList.remove('active'); });
+                            if (selectedTypes.has(filter)) {
+                                selectedTypes.delete(filter);
+                                btn.classList.remove('active');
+                            } else {
+                                selectedTypes.add(filter);
+                                btn.classList.add('active');
+                            }
+                            updateAllButtonState();
                         }
                         applyFilters();
                     });
@@ -2135,7 +2141,7 @@
             }
             function applyFilters() {
                 let filteredWorks = allWorks;
-                if (currentTypeFilter !== 'all') filteredWorks = filteredWorks.filter(w => w.type === currentTypeFilter);
+                if (selectedTypes.size > 0) filteredWorks = filteredWorks.filter(w => selectedTypes.has(w.type));
                 if (isLeadFilterActive) filteredWorks = filteredWorks.filter(w => w.role && w.role.includes('主演'));
                 if (isAwardFilterActive) filteredWorks = filteredWorks.filter(w => w.award && w.award.trim() !== '');
                 generateTimeline(filteredWorks);
