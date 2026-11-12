@@ -453,48 +453,133 @@
 
         /* ---------- Carousel ---------- */
         .c-carousel {
-            padding: 0;
+            padding: 22px 18px 18px;
             overflow: hidden;
+            position: relative;
         }
 
         .carousel {
             position: relative;
+            width: 100%;
+        }
+
+        .carousel-track-wrap {
+            overflow: hidden;
+            width: 100%;
+            border-radius: 14px;
         }
 
         .carousel-track {
-            position: relative;
-            min-height: 224px;
+            display: flex;
+            gap: 14px;
+            transition: transform .45s var(--ease);
+            will-change: transform;
         }
 
         .carousel-slide {
-            position: absolute;
-            inset: 0;
+            flex: 0 0 calc((100% - 28px) / 3);
+            aspect-ratio: 4 / 3;
+            background: var(--card-2);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            gap: 11px;
-            padding: 34px 70px;
-            text-decoration: none;
-            color: var(--ink);
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transition: opacity .6s var(--ease), visibility .6s var(--ease);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease);
+            box-sizing: border-box;
+            min-width: 0;
         }
 
-        .carousel-slide.active {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
+        .carousel-slide:hover {
+            transform: translateY(-2px);
+            border-color: var(--teal-line);
+            box-shadow: var(--shadow-lift);
+        }
+
+        @media (max-width: 960px) {
+            .carousel-slide {
+                flex: 0 0 calc((100% - 14px) / 2);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .carousel-slide {
+                flex: 0 0 100%;
+            }
+        }
+
+        .carousel-media-wrap {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-media-wrap iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        .carousel-media-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--ink) 6%, transparent), color-mix(in srgb, var(--teal) 14%, transparent));
+        }
+
+        .carousel-placeholder-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--ink);
+            text-align: center;
+            padding: 0 16px;
+            line-height: 1.4;
+        }
+
+        .carousel-placeholder-info {
+            font-size: 12px;
+            color: color-mix(in srgb, var(--ink) 65%, transparent);
+            text-align: center;
+            padding: 0 16px;
+            line-height: 1.5;
+        }
+
+        .carousel-caption {
+            padding: 10px 14px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 4px;
+            border-top: 1px solid var(--line);
+            background: color-mix(in srgb, var(--paper) 60%, var(--card-2));
+            flex: 0 0 72px;
+            justify-content: center;
+            overflow: hidden;
         }
 
         .carousel-name {
-            font-size: 21px;
+            font-size: 13.5px;
             font-weight: 700;
-            line-height: 1.45;
+            line-height: 1.35;
             letter-spacing: .01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
             transition: color .2s var(--ease);
         }
 
@@ -503,51 +588,55 @@
         }
 
         .carousel-info {
-            font-size: 13.5px;
+            font-size: 11px;
             color: var(--ink-soft);
-            line-height: 1.85;
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        .carousel-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 14px;
         }
 
         .carousel-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 3;
-            width: 38px;
-            height: 38px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             border: 1px solid var(--line);
             background: var(--card-2);
             color: var(--ink-soft);
             display: grid;
             place-items: center;
-            font-size: 12px;
-            -webkit-backdrop-filter: blur(8px);
-            backdrop-filter: blur(8px);
-            transition: color .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
+            font-size: 10px;
+            cursor: pointer;
+            transition: color .2s var(--ease), border-color .2s var(--ease), background-color .2s var(--ease), transform .2s var(--ease);
+            flex-shrink: 0;
         }
 
         .carousel-arrow:hover {
             color: var(--teal);
             border-color: var(--teal-line);
+            background: var(--teal-tint);
+            transform: scale(1.08);
         }
 
-        .carousel-arrow.prev {
-            left: 16px;
-        }
-
-        .carousel-arrow.next {
-            right: 16px;
+        .carousel-arrow:active {
+            transform: scale(.95);
         }
 
         .carousel-dots {
-            position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
             display: flex;
+            align-items: center;
+            justify-content: center;
             gap: 7px;
-            z-index: 3;
+            margin: 0;
         }
 
         .carousel-dot {
@@ -556,6 +645,8 @@
             border-radius: 50%;
             background: var(--line-strong);
             padding: 0;
+            border: none;
+            cursor: pointer;
             transition: background-color .25s var(--ease), width .25s var(--ease);
         }
 
@@ -843,15 +934,15 @@
             transition: transform .18s var(--ease), filter .18s var(--ease);
         }
 
+        .heat-cell.is-active.is-bio {
+            background: var(--viz-blue);
+        }
+
         .heat-cell.is-active:hover {
             transform: scale(1.18);
             filter: brightness(1.08);
             position: relative;
             z-index: 1;
-        }
-
-        .heat-cell.is-today {
-            box-shadow: inset 0 0 0 1.5px var(--teal);
         }
 
         .heat-emoji {
@@ -874,12 +965,6 @@
             align-self: start;
             display: grid;
             gap: 14px;
-            max-height: calc(100vh - var(--nav-h) - 32px);
-            overflow-y: auto;
-            overflow-x: hidden;
-            scrollbar-width: thin;
-            scrollbar-color: var(--line-strong) transparent;
-            padding-right: 2px;
         }
 
         .c-filter {
@@ -1031,7 +1116,11 @@
             padding-top: 14px;
             border-top: 1px solid var(--line);
             display: grid;
-            gap: 12px;
+            gap: 8px;
+        }
+
+        .filter-buttons--two {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .switch-container {
@@ -1430,12 +1519,12 @@
                 font-size: 21px;
             }
 
-            .carousel-slide {
-                padding: 28px 54px;
+            .carousel-caption {
+                padding: 12px 14px 14px;
             }
 
             .carousel-name {
-                font-size: 18px;
+                font-size: 14px;
             }
 
             .cal-header {
@@ -1471,25 +1560,17 @@
                 height: 84px;
             }
 
-            .carousel-track {
-                min-height: 256px;
-            }
-
-            .carousel-slide {
-                padding: 26px 46px;
-            }
-
             .carousel-arrow {
                 width: 32px;
                 height: 32px;
             }
 
             .carousel-arrow.prev {
-                left: 8px;
+                left: 6px;
             }
 
             .carousel-arrow.next {
-                right: 8px;
+                right: 6px;
             }
 
             .cal-controls {
@@ -1544,10 +1625,16 @@
         <div class="stack">
             <section class="card c-carousel" aria-label="ピックアップ">
                 <div class="carousel" id="carousel">
-                    <div class="carousel-track" id="carousel-track"></div>
-                    <button type="button" class="carousel-arrow prev" id="carousel-prev" aria-label="前のスライド">◀</button>
-                    <button type="button" class="carousel-arrow next" id="carousel-next" aria-label="次のスライド">▶</button>
-                    <div class="carousel-dots" id="carousel-dots"></div>
+                    <div class="carousel-track-wrap">
+                        <div class="carousel-track" id="carousel-track"></div>
+                    </div>
+                    <div class="carousel-nav">
+                        <button type="button" class="carousel-arrow prev" id="carousel-prev"
+                            aria-label="前のスライド">◀</button>
+                        <div class="carousel-dots" id="carousel-dots"></div>
+                        <button type="button" class="carousel-arrow next" id="carousel-next"
+                            aria-label="次のスライド">▶</button>
+                    </div>
                 </div>
             </section>
 
@@ -1593,20 +1680,14 @@
                             <button type="button" class="filter-btn" data-filter="BOOK">BOOK</button>
                         </div>
                         <div class="switch-row">
-                            <div class="switch-container">
-                                <label class="switch-label" for="lead-role-toggle">主演作品</label>
-                                <label class="switch"><input type="checkbox" id="lead-role-toggle"><span
-                                        class="slider"></span></label>
+                            <div class="filter-buttons filter-buttons--two">
+                                <button type="button" class="filter-btn" id="lead-role-toggle">主演作品</button>
+                                <button type="button" class="filter-btn" id="award-toggle">個人受賞作品</button>
                             </div>
-                            <div class="switch-container">
-                                <label class="switch-label" for="award-toggle">個人受賞作品</label>
-                                <label class="switch"><input type="checkbox" id="award-toggle"><span
-                                        class="slider"></span></label>
-                            </div>
-                            <div class="switch-container">
-                                <label class="switch-label" for="year-group-toggle">年別表示</label>
-                                <label class="switch"><input type="checkbox" id="year-group-toggle" checked><span
-                                        class="slider"></span></label>
+                            <div class="filter-buttons">
+                                <button type="button" class="filter-btn active" id="year-group-toggle">年別</button>
+                                <button type="button" class="filter-btn" id="series-toggle">シリーズ</button>
+                                <button type="button" class="filter-btn" id="awards-toggle">Awards</button>
                             </div>
                         </div>
                     </section>
@@ -1632,20 +1713,17 @@
                             </div>
                             <div class="chart-row" data-type="映画">
                                 <span class="chart-label mono">映画</span>
-                                <span class="chart-track"><span class="chart-fill"
-                                        style="--c:#5B8DEF"></span></span>
+                                <span class="chart-track"><span class="chart-fill" style="--c:#5B8DEF"></span></span>
                                 <span class="chart-num mono">0</span>
                             </div>
                             <div class="chart-row" data-type="TV">
                                 <span class="chart-label mono">TV</span>
-                                <span class="chart-track"><span class="chart-fill"
-                                        style="--c:#4CAF50"></span></span>
+                                <span class="chart-track"><span class="chart-fill" style="--c:#4CAF50"></span></span>
                                 <span class="chart-num mono">0</span>
                             </div>
                             <div class="chart-row" data-type="舞台">
                                 <span class="chart-label mono">舞台</span>
-                                <span class="chart-track"><span class="chart-fill"
-                                        style="--c:#F5C542"></span></span>
+                                <span class="chart-track"><span class="chart-fill" style="--c:#F5C542"></span></span>
                                 <span class="chart-num mono">0</span>
                             </div>
                             <div class="chart-row" data-type="その他">
@@ -1753,12 +1831,43 @@
 
             /* ================= Carousel ================= */
             const SLIDES = [
-                { name: 'PARCO PRODUCE 舞台『スリーゴースト』', info: '2026年10月 PARCO劇場<br>2026年11-12月 全国ツアー（大阪、福岡、愛知、岡山、宮崎）', url: 'https://stage.parco.jp/program/threeghosts/' },
-                { name: '映画『南極料理人 4Kリマスター』', info: '🍜2026年11月13日(金)公開🍜', url: 'https://www.theatres.co.jp/service/distribution/nankyoku-ryori/' },
-                { name: '映画『VIVANT』', info: '2026年12月4日(金) IN THEATER IMAX同時公開', url: 'https://vivant.toho-movie.jp/' },
-                { name: '「第77回 NHK紅白歌合戦」 🟥司会⬜️', info: '📅2026年12月31日 (木) 19:20~23:45', url: 'https://www.nhk.or.jp/kouhaku/mc77/mc_1.html' },
-                { name: 'VIVANT 第2シーズン Blu-ray&DVD📀', info: '2027年3月3日(水) 発売', url: 'https://sp.tc-ent.co.jp/vivant_link/' }
+                {
+                    name: 'PARCO PRODUCE 舞台『スリーゴースト』',
+                    info: '2026年10月 PARCO劇場<br>2026年11-12月 全国ツアー（大阪、福岡、愛知、岡山、宮崎）',
+                    url: 'https://stage.parco.jp/program/threeghosts/',
+                    youtube: 'https://www.youtube.com/watch?v=QNPMGnr6kKQ&t'
+                },
+                {
+                    name: '映画『南極料理人 4Kリマスター』',
+                    info: '🍜2026年11月13日(金)公開🍜',
+                    url: 'https://www.theatres.co.jp/service/distribution/nankyoku-ryori/',
+                    youtube: 'https://www.youtube.com/watch?v=GlwxXzX1SdI'
+                },
+                {
+                    name: '映画『VIVANT』',
+                    info: '2026年12月4日(金) IN THEATER IMAX同時公開',
+                    url: 'https://vivant.toho-movie.jp/',
+                    youtube: 'https://www.youtube.com/watch?v=cYEH0XDhWDw'
+                },
+                {
+                    name: '「第77回 NHK紅白歌合戦」 🟥司会⬜️',
+                    info: '📅2026年12月31日 (木) 19:20~23:45',
+                    url: 'https://www.nhk.or.jp/kouhaku/mc77/mc_1.html',
+                    youtube: 'https://www.youtube.com/watch?v=YtDk_wx1oZo'
+                },
+                {
+                    name: 'VIVANT 第2シーズン Blu-ray&DVD📀',
+                    info: '2027年3月3日(水) 発売',
+                    url: 'https://sp.tc-ent.co.jp/vivant_link/'
+                }
             ];
+
+            function getYouTubeEmbedUrl(url) {
+                if (!url) return null;
+                const match = url.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+                return match ? `https://www.youtube-nocookie.com/embed/${match[1]}?enablejsapi=1` : null;
+            }
+
             (function initCarousel() {
                 const track = document.getElementById('carousel-track');
                 const dotsWrap = document.getElementById('carousel-dots');
@@ -1766,34 +1875,157 @@
                 if (!track) return;
                 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 let idx = 0, timer = null;
-                SLIDES.forEach((s, i) => {
-                    const a = document.createElement('a');
-                    a.className = 'carousel-slide' + (i === 0 ? ' active' : '');
-                    a.href = s.url; a.target = '_blank'; a.rel = 'noopener';
-                    const name = document.createElement('div'); name.className = 'carousel-name'; name.textContent = s.name;
-                    const info = document.createElement('div'); info.className = 'carousel-info'; info.innerHTML = s.info;
-                    a.appendChild(name); a.appendChild(info); track.appendChild(a);
-                    const dot = document.createElement('button');
-                    dot.type = 'button'; dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-                    dot.setAttribute('aria-label', `スライド${i + 1}`);
-                    dot.addEventListener('click', () => { go(i); start(); });
-                    dotsWrap.appendChild(dot);
-                });
-                const slides = Array.from(track.children);
-                const dots = Array.from(dotsWrap.children);
-                function go(n) {
-                    idx = (n + SLIDES.length) % SLIDES.length;
-                    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-                    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+                const totalReal = SLIDES.length;
+
+                function getVisibleCount() {
+                    if (window.innerWidth <= 600) return 1;
+                    if (window.innerWidth <= 960) return 2;
+                    return 3;
                 }
+
+                // 构建一张卡片的 DOM
+                function buildSlide(s) {
+                    const slide = document.createElement('div');
+                    slide.className = 'carousel-slide';
+                    slide.tabIndex = 0;
+                    slide.setAttribute('role', 'group');
+                    slide.setAttribute('aria-label', s.name);
+
+                    slide.addEventListener('click', (e) => {
+                        if (e.target.closest('.carousel-media-wrap') || e.target.tagName === 'IFRAME') return;
+                        if (s.url && s.url !== '#') window.open(s.url, '_blank', 'noopener');
+                    });
+
+                    const mediaWrap = document.createElement('div');
+                    mediaWrap.className = 'carousel-media-wrap';
+                    const embedUrl = getYouTubeEmbedUrl(s.youtube);
+                    if (embedUrl) {
+                        const iframe = document.createElement('iframe');
+                        iframe.src = embedUrl;
+                        iframe.title = s.name;
+                        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+                        iframe.allowFullscreen = true;
+                        mediaWrap.appendChild(iframe);
+                    } else {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'carousel-media-placeholder';
+                        const pName = document.createElement('div');
+                        pName.className = 'carousel-placeholder-name';
+                        pName.textContent = s.name;
+                        const pInfo = document.createElement('div');
+                        pInfo.className = 'carousel-placeholder-info';
+                        pInfo.innerHTML = s.info;
+                        placeholder.appendChild(pName);
+                        placeholder.appendChild(pInfo);
+                        mediaWrap.appendChild(placeholder);
+                    }
+                    slide.appendChild(mediaWrap);
+
+                    const caption = document.createElement('div');
+                    caption.className = 'carousel-caption';
+                    const name = document.createElement('div');
+                    name.className = 'carousel-name';
+                    name.textContent = s.name;
+                    name.title = s.name;
+                    const info = document.createElement('div');
+                    info.className = 'carousel-info';
+                    info.innerHTML = s.info;
+                    caption.appendChild(name);
+                    caption.appendChild(info);
+                    slide.appendChild(caption);
+
+                    return slide;
+                }
+
+                // 渲染：原始卡片 + 尾部追加一组克隆，实现无限循环
+                SLIDES.forEach(s => track.appendChild(buildSlide(s)));
+                SLIDES.forEach(s => track.appendChild(buildSlide(s)));
+
+                function getCardStep() {
+                    const firstCard = track.children[0];
+                    if (!firstCard) return 0;
+                    return firstCard.getBoundingClientRect().width + 14; // 14 = gap
+                }
+
+                function setPosition(animate) {
+                    if (!animate) {
+                        track.style.transition = 'none';
+                    } else {
+                        track.style.transition = 'transform .45s var(--ease)';
+                    }
+                    const offset = idx * getCardStep();
+                    track.style.transform = `translateX(-${offset}px)`;
+                    if (!animate) {
+                        // 强制回流使 transition:none 立即生效
+                        track.offsetHeight;
+                    }
+                    updateDots();
+                }
+
+                // 当滑过所有真实卡片后，瞬移回对应的真实位置
+                track.addEventListener('transitionend', () => {
+                    if (idx >= totalReal) {
+                        idx = idx - totalReal;
+                        setPosition(false);
+                    }
+                });
+
+                function buildDots() {
+                    dotsWrap.innerHTML = '';
+                    for (let i = 0; i < totalReal; i++) {
+                        const dot = document.createElement('button');
+                        dot.type = 'button';
+                        dot.className = 'carousel-dot' + (i === (idx % totalReal) ? ' active' : '');
+                        dot.setAttribute('aria-label', `スライド ${i + 1}`);
+                        dot.addEventListener('click', () => { idx = i; setPosition(true); start(); });
+                        dotsWrap.appendChild(dot);
+                    }
+                }
+
+                function updateDots() {
+                    const realIdx = idx % totalReal;
+                    const dots = Array.from(dotsWrap.children);
+                    dots.forEach((d, i) => d.classList.toggle('active', i === realIdx));
+                }
+
+                function goNext() {
+                    idx++;
+                    setPosition(true);
+                }
+
+                function goPrev() {
+                    if (idx <= 0) {
+                        // 先瞬移到克隆区的对应位置，再动画回退一步
+                        idx = totalReal;
+                        setPosition(false);
+                        requestAnimationFrame(() => {
+                            idx = totalReal - 1;
+                            setPosition(true);
+                        });
+                    } else {
+                        idx--;
+                        setPosition(true);
+                    }
+                }
+
                 function stop() { if (timer) { clearInterval(timer); timer = null; } }
-                function start() { stop(); if (!reduce) timer = setInterval(() => go(idx + 1), 5000); }
-                document.getElementById('carousel-next').addEventListener('click', () => { go(idx + 1); start(); });
-                document.getElementById('carousel-prev').addEventListener('click', () => { go(idx - 1); start(); });
+                function start() { stop(); if (!reduce) timer = setInterval(goNext, 8000); }
+
+                document.getElementById('carousel-next').addEventListener('click', () => { goNext(); start(); });
+                document.getElementById('carousel-prev').addEventListener('click', () => { goPrev(); start(); });
+
                 carousel.addEventListener('mouseenter', stop);
                 carousel.addEventListener('mouseleave', start);
                 carousel.addEventListener('focusin', stop);
                 carousel.addEventListener('focusout', start);
+
+                window.addEventListener('resize', () => {
+                    buildDots();
+                    setPosition(false);
+                });
+
+                buildDots();
+                requestAnimationFrame(() => setPosition(false));
                 start();
             })();
 
@@ -2023,22 +2255,21 @@
                             const key = `${Y}-${M}-${D}`;
                             let active = dayMap.has(key);
                             let url = dayMap.get(key) || '';
-                            if (!active || !url) {
-                                const bioEv = bio.find(e => isEventActiveOnDate(e, date));
-                                const otherEv = otherEvents.find(e => isEventActiveOnDate(e, date));
-                                if (bioEv || otherEv) {
-                                    active = true;
-                                    if (!url) {
-                                        const ev = (bioEv && bioEv.url && bioEv.url !== '#') ? bioEv
-                                            : ((otherEv && otherEv.url && otherEv.url !== '#') ? otherEv : null);
-                                        if (ev) url = ev.url;
-                                    }
+                            const bioEv = bio.find(e => isEventActiveOnDate(e, date));
+                            const otherEv = otherEvents.find(e => isEventActiveOnDate(e, date));
+                            const isBio = !!bioEv;
+                            if (isBio || otherEv) {
+                                active = true;
+                                if (!url) {
+                                    const ev = (bioEv && bioEv.url && bioEv.url !== '#') ? bioEv
+                                        : ((otherEv && otherEv.url && otherEv.url !== '#') ? otherEv : null);
+                                    if (ev) url = ev.url;
                                 }
                             }
                             const isToday = isSameJSTDay(date, today);
                             const isBday = (M === SAKAI_BIRTH.month && D === SAKAI_BIRTH.day);
                             const cell = document.createElement(active && url ? 'a' : 'div');
-                            cell.className = 'heat-cell' + (active ? ' is-active' : '') + (isToday ? ' is-today' : '');
+                            cell.className = 'heat-cell' + (active ? ' is-active' : '') + (isBio ? ' is-bio' : '') + (isToday ? ' is-today' : '');
                             if (active && url) {
                                 cell.href = url; cell.target = '_blank'; cell.rel = 'noopener';
                                 cell.setAttribute('aria-label', formatJSTDateJapanese(date));
@@ -2071,13 +2302,59 @@
             })();
 
             /* ================= Works timeline ================= */
+            const AWARDS_REGISTRY = [
+                { "date": "2008/10/22", "name": "第1回東京ドラマアウォード助演男優賞", "work": "篤姫" },
+                { "date": "2008/12/17", "name": "第33回報知映画賞助演男優賞", "work": "クライマーズ・ハイ, アフタースクール, ジャージの二人" },
+                { "date": "2008/12/28", "name": "第21回日刊スポーツ映画大賞助演男優賞", "work": "クライマーズ・ハイ, アフタースクール" },
+                { "date": "2009/01/21", "name": "第63回毎日映画コンクール助演男優賞", "work": "クライマーズ・ハイ, アフタースクール, ジャージの二人" },
+                { "date": "2009/02/03", "name": "第51回ブルーリボン賞助演男優賞", "work": "クライマーズ・ハイ, アフタースクール" },
+                { "date": "2009/02/18", "name": "第82回キネマ旬報ベスト・テン助演男優賞", "work": "クライマーズ・ハイ, アフタースクール" },
+                { "date": "2009/05/10", "name": "第17回橋田賞個人賞", "work": "篤姫" },
+                { "date": "2009/10/21", "name": "第62回ザテレビジョンドラマアカデミー賞助演男優賞", "work": "官僚たちの夏" },
+                { "date": "2010/02/07", "name": "第31回ヨコハマ映画祭主演男優賞", "work": "クヒオ大佐, 南極料理人" },
+                { "date": "2010/04/23", "name": "第1回日本シアタースタッフ映画祭主演男優賞", "work": "南極料理人" },
+                { "date": "2010/10/27", "name": "第66回ザテレビジョンドラマアカデミー賞主演男優賞", "work": "ジョーカー 許されざる捜査官" },
+                { "date": "2011/12/21", "name": "第36回報知映画賞主演男優賞", "work": "ツレがうつになりまして。, 日輪の遺産, 武士の家計簿" },
+                { "date": "2012/04/22", "name": "第3回日本シアタースタッフ映画祭主演男優賞", "work": "ツレがうつになりまして。" },
+                { "date": "2012/10/22", "name": "第5回東京ドラマアウォード主演男優賞", "work": "リーガル・ハイ" },
+                { "date": "2013/06/03", "name": "第50回ギャラクシー賞 テレビ部門個人賞", "work": "リーガル・ハイ, 大奥〜誕生［有功・家光篇］" },
+                { "date": "2013/11/22", "name": "第78回ザテレビジョンドラマアカデミー賞主演男優賞", "work": "半沢直樹" },
+                { "date": "2013/12/02", "name": "第30回新語・流行語大賞年間大賞", "work": "半沢直樹" },
+                { "date": "2014/02/20", "name": "第79回ザテレビジョンドラマアカデミー賞主演男優賞", "work": "リーガルハイ" },
+                { "date": "2014/05/05", "name": "第17回日刊スポーツドラマグランプリ主演男優賞", "work": "半沢直樹" },
+                { "date": "2014/06/25", "name": "第40回放送文化基金賞主演男優賞", "work": "半沢直樹" },
+                { "date": "2014/10/23", "name": "第7回東京ドラマアウォード主演男優賞", "work": "半沢直樹" },
+                { "date": "2017/02/15", "name": "第91回ザテレビジョンドラマアカデミー賞主演男優賞", "work": "真田丸" },
+                { "date": "2017/10/26", "name": "第10回東京ドラマアウォード主演男優賞", "work": "真田丸" },
+                { "date": "2020/11/04", "name": "第105回ザテレビジョンドラマアカデミー賞主演男優賞", "work": "半沢直樹 2" },
+                { "date": "2021/03/24", "name": "第62回毎日芸術賞特別賞", "work": "半沢直樹 2" },
+                { "date": "2023/11/23", "name": "第117回ザテレビジョンドラマアカデミー賞主演男優賞", "work": "VIVANT" }
+            ];
+            const awardDateMap = new Map();
+            AWARDS_REGISTRY.forEach(item => { awardDateMap.set(item.name.trim(), item.date); });
+            function getWorkAwards(work) {
+                if (!work.award) return [];
+                return work.award.split(/[,，、]/).map(a => a.trim()).filter(Boolean);
+            }
+
             let allWorks = [];
+            let seriesNamesSet = new Set();
             let selectedTypes = new Set();
             let isLeadFilterActive = false;
             let isAwardFilterActive = false;
             let isGroupByYear = true;
+            let isSeriesMode = false;
+            let isAwardsMode = false;
 
             await loadData();
+
+            function getWorkSeries(w) {
+                const title = (w.title || '').trim();
+                if (title.includes('東京オレンジ')) return '東京オレンジ';
+                if (title.includes('大奥')) return '大奥';
+                if (title.includes('文・堺雅人')) return '文・堺雅人';
+                return null;
+            }
 
             function hasUwasaFlag(noteText) { return /(^|[\s,;|])uwasa($|[\s,;|])/i.test(noteText || ''); }
             function hasMemoFlag(noteText) { return /(^|[\s,;|])memo($|[\s,;|])/i.test(noteText || ''); }
@@ -2104,13 +2381,29 @@
                             const d = parseJSTDate(s.trim());
                             if (d && !isNaN(d.getTime()) && dateStart && d >= dateStart && (!effEnd || d > effEnd)) effEnd = d;
                         });
-                        return { year, name: row.Name || '', title: row.Title || '', role: row.Role || '', type: row.WorksType || '', dateStart, url: row.URL ? row.URL.trim() : '#', award: row.Award || '', effEnd, poster: (row.poster || row.Poster || '').trim() };
+                        return { year, name: row.Name || '', title: row.Title || '', role: row.Role || '', type: row.WorksType || '', dateStart, url: row.URL ? row.URL.trim() : '#', award: row.Award || '', effEnd, poster: (row.poster || row.Poster || '').trim(), series: (row.Series || row.series || '').trim() };
                     }).filter(work => work && work.year > 0);
 
                     allWorks.sort((a, b) => {
                         if (a.year !== b.year) return b.year - a.year;
                         if (a.dateStart && b.dateStart) return a.dateStart.getTime() - b.dateStart.getTime();
                         return 0;
+                    });
+
+                    const seriesCountMap = new Map();
+                    allWorks.forEach(w => {
+                        const special = getWorkSeries(w);
+                        const sName = special || (w.name || '').trim();
+                        w._series = sName || '';
+                        if (sName) {
+                            seriesCountMap.set(sName, (seriesCountMap.get(sName) || 0) + 1);
+                        }
+                    });
+                    seriesNamesSet = new Set();
+                    seriesCountMap.forEach((cnt, sName) => {
+                        if (sName === '東京オレンジ' || sName === '大奥' || sName === '文・堺雅人' || cnt >= 2) {
+                            seriesNamesSet.add(sName);
+                        }
                     });
 
                     generateTimeline(allWorks);
@@ -2125,30 +2418,94 @@
                 if (st) st.textContent = '作品データの読み込みに失敗しました。';
             }
             function setupFilterButtons() {
-                const filterButtons = document.querySelectorAll('.filter-btn');
+                const filterButtons = document.querySelectorAll('.filter-btn[data-filter]');
                 const typeFilters = ['all', '映画', 'TV', '舞台', '声の出演', 'その他', 'BOOK'];
                 const leadToggle = document.getElementById('lead-role-toggle');
                 const awardToggle = document.getElementById('award-toggle');
                 const yearGroupToggle = document.getElementById('year-group-toggle');
+                const seriesToggle = document.getElementById('series-toggle');
+                const awardsToggle = document.getElementById('awards-toggle');
                 function updateAllButtonState() {
                     const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
                     if (allBtn) {
-                        const isAll = (selectedTypes.size === 0 && !isLeadFilterActive && !isAwardFilterActive);
+                        const isAll = (selectedTypes.size === 0 && !isLeadFilterActive && !isAwardFilterActive && !isSeriesMode && !isAwardsMode);
                         allBtn.classList.toggle('active', isAll);
                     }
                 }
-                if (leadToggle) leadToggle.addEventListener('change', (e) => { isLeadFilterActive = e.target.checked; updateAllButtonState(); applyFilters(); });
-                if (awardToggle) awardToggle.addEventListener('change', (e) => { isAwardFilterActive = e.target.checked; updateAllButtonState(); applyFilters(); });
-                if (yearGroupToggle) yearGroupToggle.addEventListener('change', (e) => { isGroupByYear = e.target.checked; applyFilters(); });
+                if (leadToggle) {
+                    leadToggle.addEventListener('click', () => {
+                        isLeadFilterActive = !isLeadFilterActive;
+                        leadToggle.classList.toggle('active', isLeadFilterActive);
+                        updateAllButtonState();
+                        applyFilters();
+                    });
+                }
+                if (awardToggle) {
+                    awardToggle.addEventListener('click', () => {
+                        isAwardFilterActive = !isAwardFilterActive;
+                        awardToggle.classList.toggle('active', isAwardFilterActive);
+                        updateAllButtonState();
+                        applyFilters();
+                    });
+                }
+                if (yearGroupToggle) {
+                    yearGroupToggle.addEventListener('click', () => {
+                        isGroupByYear = !isGroupByYear;
+                        if (isGroupByYear) {
+                            isSeriesMode = false;
+                            isAwardsMode = false;
+                            if (seriesToggle) seriesToggle.classList.remove('active');
+                            if (awardsToggle) awardsToggle.classList.remove('active');
+                        }
+                        yearGroupToggle.classList.toggle('active', isGroupByYear);
+                        updateAllButtonState();
+                        applyFilters();
+                    });
+                }
+                if (seriesToggle) {
+                    seriesToggle.addEventListener('click', () => {
+                        isSeriesMode = !isSeriesMode;
+                        if (isSeriesMode) {
+                            isGroupByYear = false;
+                            isAwardsMode = false;
+                            if (yearGroupToggle) yearGroupToggle.classList.remove('active');
+                            if (awardsToggle) awardsToggle.classList.remove('active');
+                        }
+                        seriesToggle.classList.toggle('active', isSeriesMode);
+                        updateAllButtonState();
+                        applyFilters();
+                    });
+                }
+                if (awardsToggle) {
+                    awardsToggle.addEventListener('click', () => {
+                        isAwardsMode = !isAwardsMode;
+                        if (isAwardsMode) {
+                            isGroupByYear = false;
+                            isSeriesMode = false;
+                            if (yearGroupToggle) yearGroupToggle.classList.remove('active');
+                            if (seriesToggle) seriesToggle.classList.remove('active');
+                        }
+                        awardsToggle.classList.toggle('active', isAwardsMode);
+                        updateAllButtonState();
+                        applyFilters();
+                    });
+                }
                 filterButtons.forEach(btn => {
                     btn.addEventListener('click', () => {
                         const filter = btn.dataset.filter;
+                        if (!filter) return;
                         if (filter === 'all') {
                             selectedTypes.clear();
                             isLeadFilterActive = false;
                             isAwardFilterActive = false;
-                            if (leadToggle) leadToggle.checked = false;
-                            if (awardToggle) awardToggle.checked = false;
+                            isSeriesMode = false;
+                            isAwardsMode = false;
+                            isGroupByYear = true;
+                            if (leadToggle) leadToggle.classList.remove('active');
+                            if (awardToggle) awardToggle.classList.remove('active');
+                            if (seriesToggle) seriesToggle.classList.remove('active');
+                            if (awardsToggle) awardsToggle.classList.remove('active');
+                            if (yearGroupToggle) yearGroupToggle.classList.add('active');
                             filterButtons.forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
                         } else if (typeFilters.includes(filter)) {
                             if (selectedTypes.has(filter)) {
@@ -2166,6 +2523,11 @@
             }
             function applyFilters() {
                 let filteredWorks = allWorks;
+                if (isAwardsMode) {
+                    filteredWorks = filteredWorks.filter(w => w.award && w.award.trim() !== '');
+                } else if (isSeriesMode) {
+                    filteredWorks = filteredWorks.filter(w => w._series && seriesNamesSet.has(w._series));
+                }
                 if (selectedTypes.size > 0) filteredWorks = filteredWorks.filter(w => selectedTypes.has(w.type));
                 if (isLeadFilterActive) filteredWorks = filteredWorks.filter(w => w.role && w.role.includes('主演'));
                 if (isAwardFilterActive) filteredWorks = filteredWorks.filter(w => w.award && w.award.trim() !== '');
@@ -2175,7 +2537,75 @@
                 renderChart(works);
                 const timelineContainer = document.getElementById('timeline-container');
                 timelineContainer.innerHTML = '';
-                if (isGroupByYear) {
+                if (isAwardsMode) {
+                    const awardMap = new Map();
+                    works.forEach(work => {
+                        const awards = getWorkAwards(work);
+                        awards.forEach(aName => {
+                            if (!awardMap.has(aName)) awardMap.set(aName, []);
+                            if (!awardMap.get(aName).includes(work)) {
+                                awardMap.get(aName).push(work);
+                            }
+                        });
+                    });
+
+                    const awardGroups = [];
+                    awardMap.forEach((aWorks, aName) => {
+                        // 组内作品按照 dateStart 升序
+                        const sWorks = [...aWorks].sort((a, b) => {
+                            const ta = getWorkTimestamp(a);
+                            const tb = getWorkTimestamp(b);
+                            if (ta !== tb) return ta - tb;
+                            return (a.year || 0) - (b.year || 0);
+                        });
+                        const dStr = awardDateMap.get(aName) || '';
+                        let dTime = 0;
+                        if (dStr) {
+                            const parsed = parseJSTDate(dStr);
+                            if (parsed) dTime = parsed.getTime();
+                        }
+                        awardGroups.push({
+                            name: aName,
+                            date: dStr,
+                            timestamp: dTime,
+                            works: sWorks
+                        });
+                    });
+
+                    // 奖项组别排序参照 AWARDS_REGISTRY 中的 date 降序
+                    awardGroups.sort((a, b) => {
+                        if (b.timestamp !== a.timestamp) return b.timestamp - a.timestamp;
+                        return b.date.localeCompare(a.date);
+                    });
+
+                    const awardSectionsData = awardGroups.map(grp => ({
+                        label: grp.name,
+                        works: grp.works
+                    }));
+                    await renderTimelineProgressively(awardSectionsData, timelineContainer);
+                } else if (isSeriesMode) {
+                    const seriesMap = new Map();
+                    works.forEach(work => {
+                        const sName = work._series;
+                        if (!sName || !seriesNamesSet.has(sName)) return;
+                        if (!seriesMap.has(sName)) seriesMap.set(sName, []);
+                        seriesMap.get(sName).push(work);
+                    });
+                    const seriesGroups = [];
+                    seriesMap.forEach((sWorks, sName) => {
+                        sWorks.sort((a, b) => {
+                            const ta = getWorkTimestamp(a);
+                            const tb = getWorkTimestamp(b);
+                            if (ta !== tb) return ta - tb;
+                            return (a.year || 0) - (b.year || 0);
+                        });
+                        const firstTime = sWorks.length > 0 ? getWorkTimestamp(sWorks[0]) : 0;
+                        seriesGroups.push({ name: sName, firstTime, works: sWorks });
+                    });
+                    seriesGroups.sort((a, b) => b.firstTime - a.firstTime);
+                    const seriesSectionsData = seriesGroups.map(grp => ({ label: grp.name, works: grp.works }));
+                    await renderTimelineProgressively(seriesSectionsData, timelineContainer);
+                } else if (isGroupByYear) {
                     const worksByYear = {};
                     works.forEach(work => { if (!worksByYear[work.year]) worksByYear[work.year] = []; worksByYear[work.year].push(work); });
                     const currentYear = getJSTNow().getUTCFullYear();
@@ -2251,14 +2681,16 @@
                 return itemDiv;
             }
             function createYearSection(yearData) {
-                const { year, works } = yearData;
+                const { year, label, works } = yearData;
+                const title = label !== undefined ? label : year;
                 const today = getJSTMidnight();
                 const currentYear = getJSTNow().getUTCFullYear();
                 const yearDiv = document.createElement('div');
-                yearDiv.className = 'timeline-year'; yearDiv.id = 'y' + year;
-                if (year === currentYear) yearDiv.classList.add('year-now');
+                yearDiv.className = 'timeline-year';
+                if (year !== undefined) yearDiv.id = 'y' + year;
+                if (typeof year === 'number' && year === currentYear) yearDiv.classList.add('year-now');
                 const head = document.createElement('div'); head.className = 'year-head';
-                const yearLabel = document.createElement('div'); yearLabel.className = 'year-label'; yearLabel.textContent = year;
+                const yearLabel = document.createElement('div'); yearLabel.className = 'year-label'; yearLabel.textContent = title;
                 head.appendChild(yearLabel);
                 const rule = document.createElement('span'); rule.className = 'year-rule'; head.appendChild(rule);
                 yearDiv.appendChild(head);
