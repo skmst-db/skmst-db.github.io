@@ -962,6 +962,26 @@
             font-weight: 700;
         }
 
+        .chart-decade-section {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+        }
+
+        .chart-decade-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            color: var(--ink-soft);
+            margin-bottom: 10px;
+        }
+
+        .chart-decade-rows {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 11px;
+        }
+
         .filter-buttons {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1613,19 +1633,19 @@
                             <div class="chart-row" data-type="映画">
                                 <span class="chart-label mono">映画</span>
                                 <span class="chart-track"><span class="chart-fill"
-                                        style="--c:var(--viz-purple)"></span></span>
+                                        style="--c:#5B8DEF"></span></span>
                                 <span class="chart-num mono">0</span>
                             </div>
                             <div class="chart-row" data-type="TV">
                                 <span class="chart-label mono">TV</span>
                                 <span class="chart-track"><span class="chart-fill"
-                                        style="--c:var(--viz-blue)"></span></span>
+                                        style="--c:#4CAF50"></span></span>
                                 <span class="chart-num mono">0</span>
                             </div>
                             <div class="chart-row" data-type="舞台">
                                 <span class="chart-label mono">舞台</span>
                                 <span class="chart-track"><span class="chart-fill"
-                                        style="--c:var(--viz-pink)"></span></span>
+                                        style="--c:#F5C542"></span></span>
                                 <span class="chart-num mono">0</span>
                             </div>
                             <div class="chart-row" data-type="その他">
@@ -1646,6 +1666,9 @@
                                         style="--c:var(--viz-indigo)"></span></span>
                                 <span class="chart-num mono">0</span>
                             </div>
+                        </div>
+                        <div class="chart-decade-section" id="chart-decade-section">
+                            <div class="chart-decade-rows" id="chart-decade-rows"></div>
                         </div>
                     </section>
                 </div>
@@ -1872,7 +1895,7 @@
                 const mondayOf = (d) => { const m = midnight(d); const dow = m.getUTCDay(); const diff = (dow === 0 ? 6 : dow - 1); return createJSTDate(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate() - diff); };
                 const daysInMonth = (Y, M) => new Date(Date.UTC(Y, M + 1, 0)).getUTCDate();
                 let selectedDate = getJSTMidnight();
-                let weekStart = mondayOf(selectedDate);
+                let weekStart = midnight(selectedDate);
                 let heatYear = selectedDate.getUTCFullYear();
 
                 const getAnn = (Y, M) => { const k = Y + '-' + M; if (!annCache.has(k)) annCache.set(k, calculateAnniversaries(bio, Y, M).map(formatAnniversaryEvent)); return annCache.get(k); };
@@ -1918,7 +1941,7 @@
                 }
                 function setSelected(date) {
                     selectedDate = midnight(date);
-                    weekStart = mondayOf(selectedDate);
+                    weekStart = midnight(date);
                     syncSelectors();
                     render();
                     const ny = selectedDate.getUTCFullYear();
@@ -1929,7 +1952,7 @@
                     const today = getJSTMidnight();
                     titleEl.textContent = rangeLabel(days[0], days[6]);
                     weekEl.innerHTML = '';
-                    const wd = ['月', '火', '水', '木', '金', '土', '日'];
+                    const wd = ['日', '月', '火', '水', '木', '金', '土'];
                     days.forEach((d, i) => {
                         const col = document.createElement('div');
                         col.className = 'cal-day';
@@ -1940,7 +1963,7 @@
                         head.setAttribute('aria-label', formatJSTDateJapanese(d));
                         head.addEventListener('click', () => setSelected(d));
                         head.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(d); } });
-                        const w = document.createElement('div'); w.className = 'cal-weekday'; w.textContent = wd[i];
+                        const w = document.createElement('div'); w.className = 'cal-weekday'; w.textContent = wd[d.getUTCDay()];
                         const num = document.createElement('div'); num.className = 'cal-datenum'; num.textContent = d.getUTCDate();
                         head.appendChild(w); head.appendChild(num);
                         if (d.getUTCDate() === 1 || i === 0) { const ml = document.createElement('div'); ml.className = 'cal-monthlabel'; ml.textContent = (d.getUTCMonth() + 1) + '月'; head.appendChild(ml); }
@@ -2306,6 +2329,44 @@
                     const value = r.dataset.stat ? (statValues[r.dataset.stat] || 0) : (typeCounts[r.dataset.type] || 0);
                     r.querySelector('.chart-fill').style.width = (value / denom * 100) + '%';
                     r.querySelector('.chart-num').textContent = value;
+                });
+
+                // Decade chart
+                const decadeContainer = document.getElementById('chart-decade-rows');
+                if (!decadeContainer) return;
+                decadeContainer.innerHTML = '';
+                const currentYear = getJSTNow().getUTCFullYear();
+                const currentDecade = Math.floor(currentYear / 10) * 10;
+                const decades = [];
+                for (let d = currentDecade; d >= 1990; d -= 10) decades.push(d);
+                const decadeCounts = {};
+                decades.forEach(d => { decadeCounts[d] = 0; });
+                works.forEach(w => {
+                    const d = Math.floor(w.year / 10) * 10;
+                    if (d in decadeCounts) decadeCounts[d]++;
+                });
+                const decadeMax = Math.max(1, ...Object.values(decadeCounts));
+                decades.forEach(d => {
+                    const count = decadeCounts[d];
+                    const row = document.createElement('div');
+                    row.className = 'chart-row';
+                    const label = document.createElement('span');
+                    label.className = 'chart-label mono';
+                    label.textContent = d + 's';
+                    const track = document.createElement('span');
+                    track.className = 'chart-track';
+                    const fill = document.createElement('span');
+                    fill.className = 'chart-fill';
+                    fill.style.setProperty('--c', 'var(--teal)');
+                    fill.style.width = (count / decadeMax * 100) + '%';
+                    track.appendChild(fill);
+                    const num = document.createElement('span');
+                    num.className = 'chart-num mono';
+                    num.textContent = count;
+                    row.appendChild(label);
+                    row.appendChild(track);
+                    row.appendChild(num);
+                    decadeContainer.appendChild(row);
                 });
             }
         });
