@@ -1111,8 +1111,8 @@
 
         .timeline-items {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
         }
 
         .timeline-item {
@@ -1123,9 +1123,23 @@
             padding: 14px;
             cursor: pointer;
             display: grid;
-            min-height: 170px;
+            aspect-ratio: 2 / 3;
+            overflow: hidden;
             animation: rise .45s var(--ease) both;
             transition: transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease), background-color .35s var(--ease);
+        }
+
+        .timeline-item.has-poster {
+            padding: 0;
+            background: var(--card-2);
+        }
+
+        .work-poster {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: inherit;
         }
 
         .timeline-item:hover {
@@ -1277,7 +1291,7 @@
         }
 
         .skeleton-content {
-            height: 140px;
+            height: 100%;
         }
 
         .skeleton-item {
@@ -1387,7 +1401,7 @@
             }
 
             .timeline-items {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             }
 
             .year-label {
@@ -1409,7 +1423,7 @@
 
         @media (max-width: 560px) {
             .timeline-items {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .nav-btn {
@@ -1623,6 +1637,11 @@
                             <div class="switch-container">
                                 <label class="switch-label" for="award-toggle">個人受賞作品</label>
                                 <label class="switch"><input type="checkbox" id="award-toggle"><span
+                                        class="slider"></span></label>
+                            </div>
+                            <div class="switch-container">
+                                <label class="switch-label" for="year-group-toggle">年別表示</label>
+                                <label class="switch"><input type="checkbox" id="year-group-toggle" checked><span
                                         class="slider"></span></label>
                             </div>
                         </div>
@@ -2031,6 +2050,7 @@
             let currentTypeFilter = 'all';
             let isLeadFilterActive = false;
             let isAwardFilterActive = false;
+            let isGroupByYear = true;
 
             await loadData();
 
@@ -2059,7 +2079,7 @@
                             const d = parseJSTDate(s.trim());
                             if (d && !isNaN(d.getTime()) && dateStart && d >= dateStart && (!effEnd || d > effEnd)) effEnd = d;
                         });
-                        return { year, name: row.Name || '', title: row.Title || '', role: row.Role || '', type: row.WorksType || '', dateStart, url: row.URL ? row.URL.trim() : '#', award: row.Award || '', effEnd };
+                        return { year, name: row.Name || '', title: row.Title || '', role: row.Role || '', type: row.WorksType || '', dateStart, url: row.URL ? row.URL.trim() : '#', award: row.Award || '', effEnd, poster: (row.poster || row.Poster || '').trim() };
                     }).filter(work => work && work.year > 0);
 
                     allWorks.sort((a, b) => {
@@ -2084,6 +2104,7 @@
                 const typeFilters = ['all', '映画', 'TV', '舞台', '声の出演', 'その他', 'BOOK'];
                 const leadToggle = document.getElementById('lead-role-toggle');
                 const awardToggle = document.getElementById('award-toggle');
+                const yearGroupToggle = document.getElementById('year-group-toggle');
                 function updateAllButtonState() {
                     if (isLeadFilterActive || isAwardFilterActive) {
                         filterButtons.forEach(b => { if (b.dataset.filter === 'all') b.classList.remove('active'); });
@@ -2093,6 +2114,7 @@
                 }
                 if (leadToggle) leadToggle.addEventListener('change', (e) => { isLeadFilterActive = e.target.checked; updateAllButtonState(); applyFilters(); });
                 if (awardToggle) awardToggle.addEventListener('change', (e) => { isAwardFilterActive = e.target.checked; updateAllButtonState(); applyFilters(); });
+                if (yearGroupToggle) yearGroupToggle.addEventListener('change', (e) => { isGroupByYear = e.target.checked; applyFilters(); });
                 filterButtons.forEach(btn => {
                     btn.addEventListener('click', () => {
                         const filter = btn.dataset.filter;
@@ -2120,18 +2142,82 @@
             }
             async function generateTimeline(works) {
                 renderChart(works);
-                const worksByYear = {};
-                works.forEach(work => { if (!worksByYear[work.year]) worksByYear[work.year] = []; worksByYear[work.year].push(work); });
-                const currentYear = getJSTNow().getUTCFullYear();
-                const maxYearInData = Math.max(...allWorks.map(w => w.year));
-                const endYear = Math.max(currentYear, maxYearInData);
-                const startYear = 1992;
-                const yearsToRender = [];
-                for (let y = endYear; y >= startYear; y--) yearsToRender.push(y);
-                const yearSectionsData = yearsToRender.map(year => ({ year, works: worksByYear[year] || [] }));
                 const timelineContainer = document.getElementById('timeline-container');
                 timelineContainer.innerHTML = '';
-                await renderTimelineProgressively(yearSectionsData, timelineContainer);
+                if (isGroupByYear) {
+                    const worksByYear = {};
+                    works.forEach(work => { if (!worksByYear[work.year]) worksByYear[work.year] = []; worksByYear[work.year].push(work); });
+                    const currentYear = getJSTNow().getUTCFullYear();
+                    const maxYearInData = Math.max(...allWorks.map(w => w.year));
+                    const endYear = Math.max(currentYear, maxYearInData);
+                    const startYear = 1992;
+                    const yearsToRender = [];
+                    for (let y = endYear; y >= startYear; y--) yearsToRender.push(y);
+                    const yearSectionsData = yearsToRender.map(year => ({ year, works: worksByYear[year] || [] }));
+                    await renderTimelineProgressively(yearSectionsData, timelineContainer);
+                } else {
+                    const sorted = [...works].sort((a, b) => {
+                        const ta = getWorkTimestamp(a);
+                        const tb = getWorkTimestamp(b);
+                        if (tb !== ta) return tb - ta;
+                        return (b.year || 0) - (a.year || 0);
+                    });
+                    await renderFlatTimelineProgressively(sorted, timelineContainer);
+                }
+            }
+            function getWorkTimestamp(w) {
+                if (w.dateStart && !isNaN(w.dateStart.getTime())) return w.dateStart.getTime();
+                if (w.year) return createJSTDate(w.year, 0, 1).getTime();
+                return 0;
+            }
+            function createWorkCard(work, index, today) {
+                const isLead = work.role && work.role.includes('主演');
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `timeline-item ${isLead ? 'lead-role' : 'non-lead-role'}`;
+                itemDiv.style.animationDelay = `${(index % 24) * 0.05}s`;
+                itemDiv.onclick = () => window.open(work.url, '_blank');
+                itemDiv.tabIndex = 0; itemDiv.setAttribute('role', 'link');
+                itemDiv.setAttribute('aria-label', `${work.title || work.name}${work.name && work.title ? '／' + work.name : ''}（${work.year}）— リンクを新しいタブで開く`);
+                itemDiv.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); itemDiv.click(); } });
+                function renderFallback() {
+                    itemDiv.innerHTML = '';
+                    const center = document.createElement('div'); center.className = 'tile-center';
+                    const titleDiv = document.createElement('div'); titleDiv.className = 'work-title'; titleDiv.textContent = work.title || work.name;
+                    center.appendChild(titleDiv);
+                    const hasName = !!(work.name && work.title);
+                    const isUpcoming = work.dateStart && work.dateStart.getTime() > today.getTime();
+                    const isOngoing = work.dateStart && work.effEnd && work.dateStart.getTime() <= today.getTime() && today.getTime() <= work.effEnd.getTime();
+                    if (hasName || isUpcoming || isOngoing) {
+                        const sub = document.createElement('div'); sub.className = 'tile-sub';
+                        if (hasName) { const ns = document.createElement('span'); ns.className = 'work-name'; ns.textContent = work.name; sub.appendChild(ns); }
+                        if (isUpcoming) { const b = document.createElement('span'); b.className = 'badge badge-soon'; b.innerHTML = '<i></i>upcoming'; sub.appendChild(b); }
+                        else if (isOngoing) { const b = document.createElement('span'); b.className = 'badge badge-live'; b.innerHTML = '<i></i>running'; sub.appendChild(b); }
+                        center.appendChild(sub);
+                    }
+                    itemDiv.appendChild(center);
+                    const meta = document.createElement('div'); meta.className = 'tile-meta';
+                    if (isLead) { const lead = document.createElement('span'); lead.className = 'chip chip-lead'; lead.textContent = '主演'; meta.appendChild(lead); }
+                    if (work.type) { const type = document.createElement('span'); type.className = 'chip'; type.textContent = work.type; meta.appendChild(type); }
+                    const date = document.createElement('span'); date.className = 'tile-date mono'; date.textContent = formatWorkRange(work); meta.appendChild(date);
+                    itemDiv.appendChild(meta);
+                }
+
+                if (work.poster) {
+                    itemDiv.classList.add('has-poster');
+                    const img = document.createElement('img');
+                    img.className = 'work-poster';
+                    img.src = work.poster;
+                    img.alt = work.title || work.name;
+                    img.loading = 'lazy';
+                    img.onerror = () => {
+                        itemDiv.classList.remove('has-poster');
+                        renderFallback();
+                    };
+                    itemDiv.appendChild(img);
+                } else {
+                    renderFallback();
+                }
+                return itemDiv;
             }
             function createYearSection(yearData) {
                 const { year, works } = yearData;
@@ -2148,38 +2234,31 @@
                 const itemsDiv = document.createElement('div'); itemsDiv.className = 'timeline-items';
                 if (works && works.length > 0) {
                     works.forEach((work, index) => {
-                        const isLead = work.role && work.role.includes('主演');
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = `timeline-item ${isLead ? 'lead-role' : 'non-lead-role'}`;
-                        itemDiv.style.animationDelay = `${index * 0.1}s`;
-                        itemDiv.onclick = () => window.open(work.url, '_blank');
-                        itemDiv.tabIndex = 0; itemDiv.setAttribute('role', 'link');
-                        itemDiv.setAttribute('aria-label', `${work.title || work.name}${work.name && work.title ? '／' + work.name : ''}（${work.year}）— リンクを新しいタブで開く`);
-                        itemDiv.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); itemDiv.click(); } });
-                        const center = document.createElement('div'); center.className = 'tile-center';
-                        const titleDiv = document.createElement('div'); titleDiv.className = 'work-title'; titleDiv.textContent = work.title || work.name;
-                        center.appendChild(titleDiv);
-                        const hasName = !!(work.name && work.title);
-                        const isUpcoming = work.dateStart && work.dateStart.getTime() > today.getTime();
-                        const isOngoing = work.dateStart && work.effEnd && work.dateStart.getTime() <= today.getTime() && today.getTime() <= work.effEnd.getTime();
-                        if (hasName || isUpcoming || isOngoing) {
-                            const sub = document.createElement('div'); sub.className = 'tile-sub';
-                            if (hasName) { const ns = document.createElement('span'); ns.className = 'work-name'; ns.textContent = work.name; sub.appendChild(ns); }
-                            if (isUpcoming) { const b = document.createElement('span'); b.className = 'badge badge-soon'; b.innerHTML = '<i></i>upcoming'; sub.appendChild(b); }
-                            else if (isOngoing) { const b = document.createElement('span'); b.className = 'badge badge-live'; b.innerHTML = '<i></i>running'; sub.appendChild(b); }
-                            center.appendChild(sub);
-                        }
-                        itemDiv.appendChild(center);
-                        const meta = document.createElement('div'); meta.className = 'tile-meta';
-                        if (isLead) { const lead = document.createElement('span'); lead.className = 'chip chip-lead'; lead.textContent = '主演'; meta.appendChild(lead); }
-                        if (work.type) { const type = document.createElement('span'); type.className = 'chip'; type.textContent = work.type; meta.appendChild(type); }
-                        const date = document.createElement('span'); date.className = 'tile-date mono'; date.textContent = formatWorkRange(work); meta.appendChild(date);
-                        itemDiv.appendChild(meta);
-                        itemsDiv.appendChild(itemDiv);
+                        itemsDiv.appendChild(createWorkCard(work, index, today));
                     });
                 }
                 yearDiv.appendChild(itemsDiv);
                 return yearDiv;
+            }
+            function renderFlatTimelineProgressively(works, container) {
+                return new Promise((resolve) => {
+                    const itemsDiv = document.createElement('div');
+                    itemsDiv.className = 'timeline-items';
+                    container.appendChild(itemsDiv);
+                    const today = getJSTMidnight();
+                    const BATCH_SIZE = 24;
+                    let currentIndex = 0;
+                    function renderBatch() {
+                        const endIndex = Math.min(currentIndex + BATCH_SIZE, works.length);
+                        for (let i = currentIndex; i < endIndex; i++) {
+                            itemsDiv.appendChild(createWorkCard(works[i], i, today));
+                        }
+                        currentIndex = endIndex;
+                        if (currentIndex < works.length) requestAnimationFrame(renderBatch);
+                        else resolve();
+                    }
+                    renderBatch();
+                });
             }
             function formatWorkRange(work) {
                 if (!work.dateStart) return '日付不明';
