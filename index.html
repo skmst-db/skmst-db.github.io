@@ -121,6 +121,7 @@
             --on-teal: #131311;
             --amber: #D9A441;
             --amber-tint: rgba(217, 164, 65, .15);
+            --heat: #E5B84B;
             --viz-purple: #9D8FE8;
             --viz-blue: #6FA3DC;
             --viz-pink: #DE8FAF;
@@ -151,6 +152,7 @@
             --on-teal: #F2F0EA;
             --amber: #9A6B00;
             --amber-tint: rgba(176, 124, 16, .14);
+            --heat: #DFA33C;
             --viz-purple: #7C6FD0;
             --viz-blue: #4E86C6;
             --viz-pink: #C76E93;
@@ -183,6 +185,7 @@
             background: var(--paper);
             padding-top: calc(var(--nav-h) + 26px);
             min-height: 100vh;
+            overflow-x: hidden;
             transition: background-color .35s var(--ease), color .35s var(--ease);
         }
 
@@ -413,11 +416,13 @@
             max-width: 1600px;
             margin: 0 auto;
             padding: 0 12px 70px;
+            min-width: 0;
         }
 
         .stack {
             display: grid;
             gap: 14px;
+            min-width: 0;
         }
 
         .card {
@@ -428,6 +433,8 @@
             border-radius: 16px;
             box-shadow: var(--shadow);
             padding: 22px;
+            min-width: 0;
+            max-width: 100%;
             transition: background-color .35s var(--ease), border-color .35s var(--ease);
             animation: card-in .55s var(--ease) both;
         }
@@ -752,6 +759,104 @@
         .cal-event.is-clickable:hover {
             transform: translateY(-1px);
             filter: brightness(1.08);
+        }
+
+        /* ---------- Heatmap (contribution graph) ---------- */
+        .heat-scroll {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid var(--line);
+            overflow-x: auto;
+            max-width: 100%;
+            min-width: 0;
+            padding-bottom: 6px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--line-strong) transparent;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .heat {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            column-gap: 10px;
+            min-width: 780px;
+            width: 100%;
+        }
+
+        .heat-side {
+            padding-top: 22px;
+            display: grid;
+            grid-template-rows: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .heat-wd {
+            font-size: 10px;
+            color: var(--ink-faint);
+            display: grid;
+            place-items: center;
+            line-height: 1;
+        }
+
+        .heat-months {
+            display: grid;
+            height: 16px;
+            margin-bottom: 6px;
+        }
+
+        .heat-month {
+            font-size: 10px;
+            color: var(--ink-faint);
+            font-variant-numeric: tabular-nums;
+            justify-self: start;
+            line-height: 16px;
+            white-space: nowrap;
+        }
+
+        .heat-grid {
+            display: grid;
+            grid-template-rows: repeat(7, auto);
+            grid-auto-flow: column;
+            gap: 4px;
+        }
+
+        .heat-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background: color-mix(in srgb, var(--ink) 7%, transparent);
+            box-shadow: inset 0 0 0 1px var(--line);
+            display: grid;
+            place-items: center;
+            font-size: clamp(8px, 1.05vw, 15px);
+            line-height: 1;
+            text-decoration: none;
+        }
+
+        .heat-cell.is-out {
+            visibility: hidden;
+        }
+
+        .heat-cell.is-active {
+            background: var(--heat);
+            box-shadow: none;
+            cursor: pointer;
+            transition: transform .18s var(--ease), filter .18s var(--ease);
+        }
+
+        .heat-cell.is-active:hover {
+            transform: scale(1.18);
+            filter: brightness(1.08);
+            position: relative;
+            z-index: 1;
+        }
+
+        .heat-cell.is-today {
+            box-shadow: inset 0 0 0 1.5px var(--teal);
+        }
+
+        .heat-emoji {
+            pointer-events: none;
+            font-size: 0.8em;
         }
 
         /* ---------- Content area ---------- */
@@ -1380,7 +1485,6 @@
             <a class="brand" href="https://skmst.netlify.app" target="_blank"><span
                     class="brand-name">skmst-db</span></a>
             <nav class="nav-links" aria-label="サイトナビゲーション">
-
             </nav>
             <div class="nav-ctrl">
                 <button type="button" class="nav-btn" id="theme-toggle" aria-label="ライトモードに切り替え"><span class="nav-glyph"
@@ -1428,6 +1532,16 @@
                     </div>
                 </div>
                 <div class="cal-week" id="cal-week"></div>
+
+                <div class="heat-scroll">
+                    <div class="heat" aria-label="アクティビティヒートマップ">
+                        <div class="heat-side" id="heat-side"></div>
+                        <div class="heat-main">
+                            <div class="heat-months" id="heat-months"></div>
+                            <div class="heat-grid" id="heat-grid"></div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <div class="bento">
@@ -1639,7 +1753,7 @@
                 start();
             })();
 
-            /* ================= Calendar: anniversary week view ================= */
+            /* ================= Calendar: anniversary week view + heatmap ================= */
             const special_memo = [
                 { name: '乃木憂助の誕生日', month: 0, day: 25, startYear: 2024, url: 'https://h2col.notion.site/1b68a08476c780e78f0fe8e8e8441e1b' },
                 { name: '伊達一義の誕生日', month: 5, day: 29, startYear: 2011, url: 'https://h2col.notion.site/1b68a08476c780caa667e03f4ffdffb8' },
@@ -1681,27 +1795,64 @@
                     default: return { bg: 'rgba(52, 152, 219, 0.8)', text: '#ffffff' };
                 }
             }
+            async function fetchDayRows() {
+                try {
+                    const res = await fetch('/data/day.csv');
+                    const text = await res.text();
+                    const lines = text.split('\n').filter(l => l.trim());
+                    if (lines.length < 2) return [];
+                    const header = parseCSVRow(lines[0]);
+                    return lines.slice(1).map(line => {
+                        const cols = parseCSVRow(line);
+                        const o = {};
+                        header.forEach((h, i) => { o[h] = (cols[i] || '').trim(); });
+                        return o;
+                    });
+                } catch (e) { console.error('day.csv error:', e); return []; }
+            }
             (async function initCalendar() {
                 const weekEl = document.getElementById('cal-week');
                 const titleEl = document.getElementById('cal-title');
                 const yearSel = document.getElementById('cal-year');
                 const monthSel = document.getElementById('cal-month');
                 const daySel = document.getElementById('cal-day');
+                const heatSide = document.getElementById('heat-side');
+                const heatMonths = document.getElementById('heat-months');
+                const heatGrid = document.getElementById('heat-grid');
                 if (!weekEl) return;
-                let bio = [], holidays = [], otherEvents = [];
+                let bio = [], holidays = [], otherEvents = [], dayRows = [];
                 try {
-                    [bio, holidays, otherEvents] = await Promise.all([
+                    [bio, holidays, otherEvents, dayRows] = await Promise.all([
                         fetchBiographyCSV(),
                         parseSyukujitsuCSV(),
-                        parseOtherCSV()
+                        parseOtherCSV(),
+                        fetchDayRows()
                     ]);
                 } catch (e) { console.error('Calendar data error:', e); }
+
+                const dayMap = new Map();
+                dayRows.forEach(row => {
+                    const mmdd = (row.day || '').trim();
+                    if (!/^\d{4}$/.test(mmdd)) return;
+                    const M = parseInt(mmdd.slice(0, 2), 10) - 1;
+                    const D = parseInt(mmdd.slice(2), 10);
+                    if (M < 0 || M > 11 || D < 1 || D > 31) return;
+                    const url = row.url || '';
+                    (row.year || '').split(',').forEach(y => {
+                        const Y = parseInt(y.trim(), 10);
+                        if (!Number.isFinite(Y) || Y <= 0) return;
+                        const key = `${Y}-${M}-${D}`;
+                        if (!dayMap.has(key)) dayMap.set(key, url);
+                    });
+                });
+
                 const annCache = new Map(), mileCache = new Map();
                 const midnight = (d) => createJSTDate(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
                 const mondayOf = (d) => { const m = midnight(d); const dow = m.getUTCDay(); const diff = (dow === 0 ? 6 : dow - 1); return createJSTDate(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate() - diff); };
                 const daysInMonth = (Y, M) => new Date(Date.UTC(Y, M + 1, 0)).getUTCDate();
                 let selectedDate = getJSTMidnight();
                 let weekStart = mondayOf(selectedDate);
+                let heatYear = selectedDate.getUTCFullYear();
 
                 const getAnn = (Y, M) => { const k = Y + '-' + M; if (!annCache.has(k)) annCache.set(k, calculateAnniversaries(bio, Y, M).map(formatAnniversaryEvent)); return annCache.get(k); };
                 const getMile = (Y, M) => { const k = Y + '-' + M; if (!mileCache.has(k)) mileCache.set(k, calculateSakaiMilestones(Y, M)); return mileCache.get(k); };
@@ -1749,6 +1900,8 @@
                     weekStart = mondayOf(selectedDate);
                     syncSelectors();
                     render();
+                    const ny = selectedDate.getUTCFullYear();
+                    if (ny !== heatYear) { heatYear = ny; renderHeatmap(ny); }
                 }
                 function render() {
                     const days = Array.from({ length: 7 }, (_, i) => createJSTDate(weekStart.getUTCFullYear(), weekStart.getUTCMonth(), weekStart.getUTCDate() + i));
@@ -1788,6 +1941,75 @@
                         weekEl.appendChild(col);
                     });
                 }
+                function renderHeatmap(Y) {
+                    const start = mondayOf(createJSTDate(Y, 0, 1));
+                    const lastMonday = mondayOf(createJSTDate(Y, 11, 31));
+                    const weeks = Math.round((lastMonday.getTime() - start.getTime()) / 604800000) + 1;
+                    const cols = `repeat(${weeks}, minmax(0, 1fr))`;
+                    heatGrid.style.gridTemplateColumns = cols;
+                    heatMonths.style.gridTemplateColumns = cols;
+                    heatMonths.innerHTML = '';
+                    for (let m = 0; m < 12; m++) {
+                        const col = Math.floor((createJSTDate(Y, m, 1).getTime() - start.getTime()) / 86400000 / 7) + 1;
+                        const lab = document.createElement('div');
+                        lab.className = 'heat-month';
+                        lab.style.gridColumn = String(col);
+                        lab.textContent = m + 1;
+                        heatMonths.appendChild(lab);
+                    }
+                    heatSide.innerHTML = '';
+                    ['月', '火', '水', '木', '金', '土', '日'].forEach(w => {
+                        const el = document.createElement('div'); el.className = 'heat-wd'; el.textContent = w;
+                        heatSide.appendChild(el);
+                    });
+                    heatGrid.innerHTML = '';
+                    const today = getJSTMidnight();
+                    const frag = document.createDocumentFragment();
+                    for (let w = 0; w < weeks; w++) {
+                        for (let r = 0; r < 7; r++) {
+                            const date = createJSTDate(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate() + w * 7 + r);
+                            if (date.getUTCFullYear() !== Y) {
+                                const out = document.createElement('div');
+                                out.className = 'heat-cell is-out';
+                                out.setAttribute('aria-hidden', 'true');
+                                frag.appendChild(out);
+                                continue;
+                            }
+                            const M = date.getUTCMonth(), D = date.getUTCDate();
+                            const key = `${Y}-${M}-${D}`;
+                            let active = dayMap.has(key);
+                            let url = dayMap.get(key) || '';
+                            if (!active || !url) {
+                                const bioEv = bio.find(e => isEventActiveOnDate(e, date));
+                                const otherEv = otherEvents.find(e => isEventActiveOnDate(e, date));
+                                if (bioEv || otherEv) {
+                                    active = true;
+                                    if (!url) {
+                                        const ev = (bioEv && bioEv.url && bioEv.url !== '#') ? bioEv
+                                            : ((otherEv && otherEv.url && otherEv.url !== '#') ? otherEv : null);
+                                        if (ev) url = ev.url;
+                                    }
+                                }
+                            }
+                            const isToday = isSameJSTDay(date, today);
+                            const isBday = (M === SAKAI_BIRTH.month && D === SAKAI_BIRTH.day);
+                            const cell = document.createElement(active && url ? 'a' : 'div');
+                            cell.className = 'heat-cell' + (active ? ' is-active' : '') + (isToday ? ' is-today' : '');
+                            if (active && url) {
+                                cell.href = url; cell.target = '_blank'; cell.rel = 'noopener';
+                                cell.setAttribute('aria-label', formatJSTDateJapanese(date));
+                            }
+                            if (isToday || isBday) {
+                                const em = document.createElement('span');
+                                em.className = 'heat-emoji';
+                                em.textContent = isToday ? '🚩' : '🎂';
+                                cell.appendChild(em);
+                            }
+                            frag.appendChild(cell);
+                        }
+                    }
+                    heatGrid.appendChild(frag);
+                }
                 function onYearMonthChange() {
                     const Y = parseInt(yearSel.value, 10), M = parseInt(monthSel.value, 10);
                     const D = Math.min(parseInt(daySel.value, 10) || 1, daysInMonth(Y, M));
@@ -1801,6 +2023,7 @@
                 document.getElementById('cal-today').addEventListener('click', () => setSelected(getJSTNow()));
                 buildSelectors();
                 render();
+                renderHeatmap(heatYear);
             })();
 
             /* ================= Works timeline ================= */
