@@ -659,18 +659,11 @@
         /* ---------- Calendar (anniversary week view) ---------- */
         .cal-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             gap: 14px;
             flex-wrap: wrap;
             margin-bottom: 16px;
-        }
-
-        .cal-title {
-            font-size: 16px;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-            letter-spacing: .02em;
         }
 
         .cal-controls {
@@ -1526,10 +1519,6 @@
             .carousel-name {
                 font-size: 14px;
             }
-
-            .cal-header {
-                align-items: flex-start;
-            }
         }
 
         @media (max-width: 560px) {
@@ -1547,12 +1536,11 @@
             }
 
             .cal-week {
-                flex-direction: column;
-                overflow-x: visible;
+                overflow-x: auto;
             }
 
             .cal-day {
-                flex: none;
+                flex: 0 0 172px;
                 min-height: auto;
             }
 
@@ -1640,7 +1628,6 @@
 
             <section class="card c-calendar" aria-label="カレンダー">
                 <div class="cal-header">
-                    <div class="cal-title" id="cal-title"></div>
                     <div class="cal-controls">
                         <div class="cal-selects">
                             <select id="cal-year" aria-label="年"></select>
@@ -2088,7 +2075,6 @@
             }
             (async function initCalendar() {
                 const weekEl = document.getElementById('cal-week');
-                const titleEl = document.getElementById('cal-title');
                 const yearSel = document.getElementById('cal-year');
                 const monthSel = document.getElementById('cal-month');
                 const daySel = document.getElementById('cal-day');
@@ -2182,7 +2168,6 @@
                 function render() {
                     const days = Array.from({ length: 7 }, (_, i) => createJSTDate(weekStart.getUTCFullYear(), weekStart.getUTCMonth(), weekStart.getUTCDate() + i));
                     const today = getJSTMidnight();
-                    titleEl.textContent = rangeLabel(days[0], days[6]);
                     weekEl.innerHTML = '';
                     const wd = ['日', '月', '火', '水', '木', '金', '土'];
                     days.forEach((d, i) => {
@@ -2777,7 +2762,7 @@
                     const d = Math.floor(w.year / 10) * 10;
                     if (d in decadeCounts) decadeCounts[d]++;
                 });
-                const decadeMax = Math.max(1, ...Object.values(decadeCounts));
+                const decadeMax = denom;
                 decades.forEach(d => {
                     const count = decadeCounts[d];
                     const row = document.createElement('div');
