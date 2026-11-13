@@ -29,12 +29,8 @@
         })();
     </script>
 
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
-    <link rel="shortcut icon" type="image/png" sizes="32x32" href="/favicon.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,35 +61,14 @@
             if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
             return `${date.getUTCFullYear()}年${date.getUTCMonth() + 1}月${date.getUTCDate()}日`;
         }
-        function formatJSTDateTimeJapanese(date) {
-            if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
-            return `${date.getUTCFullYear()}年${date.getUTCMonth() + 1}月${date.getUTCDate()}日 ${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`;
-        }
         function getJSTMidnight() { const now = getJSTNow(); return createJSTDate(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()); }
-        function getMillisecondsUntilJSTMidnight() { const now = getJSTNow(); const m = getJSTMidnight(); m.setUTCDate(m.getUTCDate() + 1); return m.getTime() - now.getTime(); }
         function getJSTYear() { return getJSTNow().getUTCFullYear(); }
-        function getJSTMonth() { return getJSTNow().getUTCMonth(); }
-        function getJSTDate() { return getJSTNow().getUTCDate(); }
-        function getJSTHours() { return getJSTNow().getUTCHours(); }
-        function getJSTMinutes() { return getJSTNow().getUTCMinutes(); }
-        function getJSTSeconds() { return getJSTNow().getUTCSeconds(); }
         function createJSTDate(year, month, day, hour = 0, minute = 0, second = 0) { return new Date(Date.UTC(year, month, day, hour, minute, second)); }
         function isSameJSTDay(date1, date2) {
             if (!date1 || !date2) return false;
             return date1.getUTCFullYear() === date2.getUTCFullYear() && date1.getUTCMonth() === date2.getUTCMonth() && date1.getUTCDate() === date2.getUTCDate();
         }
-        function isJSTToday(date) { return isSameJSTDay(date, getJSTNow()); }
-        function getJSTDaysDifference(date1, date2) {
-            const m1 = createJSTDate(date1.getUTCFullYear(), date1.getUTCMonth(), date1.getUTCDate());
-            const m2 = createJSTDate(date2.getUTCFullYear(), date2.getUTCMonth(), date2.getUTCDate());
-            return Math.floor((m2.getTime() - m1.getTime()) / (1000 * 60 * 60 * 24));
-        }
         function formatDate(date) { return formatJSTDate(date); }
-        function toJST(date) { if (!date || !(date instanceof Date) || isNaN(date.getTime())) return new Date(NaN); return new Date(date.getTime()); }
-        function getJSTNowString() {
-            const now = getJSTNow();
-            return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')} ${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}:${String(now.getUTCSeconds()).padStart(2, '0')} JST`;
-        }
     </script>
 
     <style>
@@ -122,9 +97,7 @@
             --amber: #D9A441;
             --amber-tint: rgba(217, 164, 65, .15);
             --heat: #E5B84B;
-            --viz-purple: #9D8FE8;
             --viz-blue: #6FA3DC;
-            --viz-pink: #DE8FAF;
             --viz-orange: #E0955C;
             --viz-indigo: #8290E0;
             --viz-slate: #A39C8C;
@@ -153,9 +126,7 @@
             --amber: #9A6B00;
             --amber-tint: rgba(176, 124, 16, .14);
             --heat: #DFA33C;
-            --viz-purple: #7C6FD0;
             --viz-blue: #4E86C6;
-            --viz-pink: #C76E93;
             --viz-orange: #C97A3D;
             --viz-indigo: #5A6ACF;
             --viz-slate: #8A8578;
@@ -1046,14 +1017,6 @@
             border-top: 1px solid var(--line);
         }
 
-        .chart-decade-title {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: .08em;
-            color: var(--ink-soft);
-            margin-bottom: 10px;
-        }
-
         .chart-decade-rows {
             display: grid;
             grid-template-columns: 1fr;
@@ -1114,71 +1077,6 @@
 
         .filter-buttons--two {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .switch-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .switch-label {
-            font-size: 12.5px;
-            color: var(--ink-soft);
-            cursor: pointer;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 46px;
-            height: 26px;
-            flex-shrink: 0;
-            cursor: pointer;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background: var(--card-2);
-            border: 1px solid var(--line-strong);
-            border-radius: 999px;
-            transition: background-color .25s var(--ease), border-color .25s var(--ease);
-        }
-
-        .slider::before {
-            content: "";
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            left: 3px;
-            top: 3px;
-            border-radius: 50%;
-            background: var(--ink-soft);
-            transition: transform .25s var(--ease), background-color .25s var(--ease);
-        }
-
-        .switch input:checked+.slider {
-            background: var(--teal);
-            border-color: var(--teal);
-        }
-
-        .switch input:checked+.slider::before {
-            transform: translateX(20px);
-            background: var(--on-teal);
-        }
-
-        .switch input:focus-visible+.slider {
-            outline: 2px solid var(--teal);
-            outline-offset: 2px;
         }
 
         .timeline-year {
@@ -1535,12 +1433,7 @@
                 gap: 8px 10px;
             }
 
-            .cal-week {
-                overflow-x: auto;
-            }
-
             .cal-day {
-                flex: 0 0 172px;
                 min-height: auto;
             }
 
@@ -1864,12 +1757,6 @@
                 let idx = 0, timer = null;
                 const totalReal = SLIDES.length;
 
-                function getVisibleCount() {
-                    if (window.innerWidth <= 600) return 1;
-                    if (window.innerWidth <= 960) return 2;
-                    return 3;
-                }
-
                 // 构建一张卡片的 DOM
                 function buildSlide(s) {
                     const slide = document.createElement('div');
@@ -2129,12 +2016,6 @@
                     getAnn(Y, M).forEach(a => { if (isSameJSTDay(a.startDate, d)) out.push({ title: a.title, url: a.url, source: 'anniversary', color: a.color }); });
                     return out;
                 }
-                function rangeLabel(a, b) {
-                    const ay = a.getUTCFullYear(), by = b.getUTCFullYear(), am = a.getUTCMonth() + 1, bm = b.getUTCMonth() + 1;
-                    if (ay === by && am === bm) return `${ay}年${am}月${a.getUTCDate()}日 – ${b.getUTCDate()}日`;
-                    if (ay === by) return `${ay}年${am}月${a.getUTCDate()}日 – ${bm}月${b.getUTCDate()}日`;
-                    return `${ay}年${am}月${a.getUTCDate()}日 – ${by}年${bm}月${b.getUTCDate()}日`;
-                }
                 function buildDays() {
                     const Y = parseInt(yearSel.value, 10), M = parseInt(monthSel.value, 10);
                     const dim = daysInMonth(Y, M);
@@ -2359,7 +2240,7 @@
                         const dateStart = parseJSTDate((row.DateStart || '').trim());
                         let year = 0;
                         if (dateStart) year = dateStart.getUTCFullYear();
-                        else { const nt = row.Note || ''; if (nt && !hasUwasaFlag(nt)) year = extractYearFromNote(nt); }
+                        else { const nt = row.Note || ''; if (nt) year = extractYearFromNote(nt); }
                         const dateEnd = parseJSTDate((row.DateEnd || '').trim());
                         let effEnd = (dateEnd && dateStart && dateEnd > dateStart) ? dateEnd : null;
                         (row.DateAdd || '').split(',').forEach(s => {
