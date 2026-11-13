@@ -699,6 +699,14 @@
             transform: translateY(-1px);
         }
 
+        .cal-nav button:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            color: var(--ink-soft);
+            border-color: var(--line);
+            transform: none;
+        }
+
         .cal-nav .cal-step {
             width: 36px;
             padding: 0;
@@ -1999,6 +2007,19 @@
                 const midnight = (d) => createJSTDate(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
                 const mondayOf = (d) => { const m = midnight(d); const dow = m.getUTCDay(); const diff = (dow === 0 ? 6 : dow - 1); return createJSTDate(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate() - diff); };
                 const daysInMonth = (Y, M) => new Date(Date.UTC(Y, M + 1, 0)).getUTCDate();
+                // 日历可用范围：1992/01/01 〜 (当前年+3)/12/31
+                const MIN_YEAR = 1992, MAX_YEAR = getJSTYear() + 3;
+                const MIN_DATE = createJSTDate(MIN_YEAR, 0, 1);
+                const MAX_DATE = createJSTDate(MAX_YEAR, 11, 31);
+                const MAX_WEEK_START = createJSTDate(MAX_YEAR, 11, 31 - 6);
+                const clampDate = (d) => {
+                    const t = midnight(d).getTime();
+                    if (isNaN(t) || t < MIN_DATE.getTime()) return new Date(MIN_DATE.getTime());
+                    if (t > MAX_DATE.getTime()) return new Date(MAX_DATE.getTime());
+                    return midnight(d);
+                };
+                const prevBtn = document.getElementById('cal-prev');
+                const nextBtn = document.getElementById('cal-next');
                 let selectedDate = getJSTMidnight();
                 let weekStart = midnight(selectedDate);
                 let heatYear = selectedDate.getUTCFullYear();
@@ -2031,17 +2052,19 @@
                     daySel.value = selectedDate.getUTCDate();
                 }
                 function buildSelectors() {
-                    const cy = getJSTYear();
                     yearSel.innerHTML = '';
-                    for (let y = cy + 3; y >= 1992; y--) { const o = document.createElement('option'); o.value = y; o.textContent = y + '年'; yearSel.appendChild(o); }
+                    for (let y = MAX_YEAR; y >= MIN_YEAR; y--) { const o = document.createElement('option'); o.value = y; o.textContent = y + '年'; yearSel.appendChild(o); }
                     monthSel.innerHTML = '';
                     for (let m = 0; m < 12; m++) { const o = document.createElement('option'); o.value = m; o.textContent = (m + 1) + '月'; monthSel.appendChild(o); }
                     syncSelectors();
                 }
                 function setSelected(date) {
-                    selectedDate = midnight(date);
-                    weekStart = midnight(date);
+                    selectedDate = clampDate(date);
+                    // 周视图的 7 天不超出范围末尾
+                    weekStart = selectedDate.getTime() > MAX_WEEK_START.getTime() ? new Date(MAX_WEEK_START.getTime()) : new Date(selectedDate.getTime());
                     syncSelectors();
+                    prevBtn.disabled = selectedDate.getTime() <= MIN_DATE.getTime();
+                    nextBtn.disabled = selectedDate.getTime() >= MAX_DATE.getTime();
                     render();
                     const ny = selectedDate.getUTCFullYear();
                     if (ny !== heatYear) { heatYear = ny; renderHeatmap(ny); }
@@ -2159,11 +2182,11 @@
                 yearSel.addEventListener('change', onYearMonthChange);
                 monthSel.addEventListener('change', onYearMonthChange);
                 daySel.addEventListener('change', () => setSelected(createJSTDate(parseInt(yearSel.value, 10), parseInt(monthSel.value, 10), parseInt(daySel.value, 10))));
-                document.getElementById('cal-prev').addEventListener('click', () => setSelected(createJSTDate(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate() - 7)));
-                document.getElementById('cal-next').addEventListener('click', () => setSelected(createJSTDate(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate() + 7)));
+                prevBtn.addEventListener('click', () => setSelected(createJSTDate(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate() - 7)));
+                nextBtn.addEventListener('click', () => setSelected(createJSTDate(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate() + 7)));
                 document.getElementById('cal-today').addEventListener('click', () => setSelected(getJSTNow()));
                 buildSelectors();
-                render();
+                setSelected(selectedDate);
                 renderHeatmap(heatYear);
             })();
 
