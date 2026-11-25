@@ -1768,75 +1768,121 @@
                     return slide;
                 }
 
-                // 渲染：原始卡片 + 尾部追加一组克隆，实现无限循环
-                SLIDES.forEach(s => track.appendChild(buildSlide(s)));
-                SLIDES.forEach(s => track.appendChild(buildSlide(s)));
+                // 仅渲染一组真实卡片，通过滑出视口后轮转 DOM 节点实现无缝循环（避免克隆区瞬移闪烁与双倍 iframe）
+                SLIDES.forEach((s, i) => {
+                    const el = buildSlide(s);
+                    el.dataset.idx = String(i);
+                    track.appendChild(el);
+                });
+
+                let isAnimating = false;
+                let animFallbackTimer = null;
 
                 function getCardStep() {
+                    if (track.children.length >= 2) {
+                        const r0 = track.children[0].getBoundingClientRect();
+                        const r1 = track.children[1].getBoundingClientRect();
+                        if (r1.left > r0.left) return r1.left - r0.left;
+                    }
                     const firstCard = track.children[0];
-                    if (!firstCard) return 0;
-                    return firstCard.getBoundingClientRect().width + 14; // 14 = gap
+                    return firstCard ? firstCard.getBoundingClientRect().width + 14 : 0;
                 }
 
-                function setPosition(animate) {
-                    if (!animate) {
-                        track.style.transition = 'none';
-                    } else {
-                        track.style.transition = 'transform .45s var(--ease)';
-                    }
-                    const offset = idx * getCardStep();
-                    track.style.transform = `translateX(-${offset}px)`;
-                    if (!animate) {
-                        // 强制回流使 transition:none 立即生效
-                        track.offsetHeight;
-                    }
-                    updateDots();
+                function clearAnimLock() {
+                    if (animFallbackTimer) { clearTimeout(animFallbackTimer); animFallbackTimer = null; }
+                    isAnimating = false;
                 }
-
-                // 当滑过所有真实卡片后，瞬移回对应的真实位置
-                track.addEventListener('transitionend', () => {
-                    if (idx >= totalReal) {
-                        idx = idx - totalReal;
-                        setPosition(false);
-                    }
-                });
 
                 function buildDots() {
                     dotsWrap.innerHTML = '';
                     for (let i = 0; i < totalReal; i++) {
                         const dot = document.createElement('button');
                         dot.type = 'button';
-                        dot.className = 'carousel-dot' + (i === (idx % totalReal) ? ' active' : '');
+                        dot.className = 'carousel-dot' + (i === idx ? ' active' : '');
                         dot.setAttribute('aria-label', `スライド ${i + 1}`);
-                        dot.addEventListener('click', () => { idx = i; setPosition(true); start(); });
+                        dot.addEventListener('click', () => { goTo(i); start(); });
                         dotsWrap.appendChild(dot);
                     }
                 }
 
                 function updateDots() {
-                    const realIdx = idx % totalReal;
                     const dots = Array.from(dotsWrap.children);
-                    dots.forEach((d, i) => d.classList.toggle('active', i === realIdx));
+                    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+                }
+
+                function finishNext() {
+                    clearAnimLock();
+                    track.style.transition = 'none';
+                    track.appendChild(track.firstElementChild);
+                    track.style.transform = 'translateX(0)';
+                    track.offsetHeight;
                 }
 
                 function goNext() {
-                    idx++;
-                    setPosition(true);
+                    if (isAnimating || totalReal < 2) return;
+                    const step = getCardStep();
+                    if (!step) return;
+                    isAnimating = true;
+                    idx = (idx + 1) % totalReal;
+                    updateDots();
+
+                    track.style.transition = 'transform .45s var(--ease)';
+                    track.style.transform = `translateX(-${step}px)`;
+
+                    const onEnd = (e) => {
+                        if (e && (e.target !== track || e.propertyName !== 'transform')) return;
+                        track.removeEventListener('transitionend', onEnd);
+                        finishNext();
+                    };
+                    track.addEventListener('transitionend', onEnd);
+                    animFallbackTimer = setTimeout(() => {
+                        track.removeEventListener('transitionend', onEnd);
+                        if (isAnimating) finishNext();
+                    }, 560);
                 }
 
                 function goPrev() {
-                    if (idx <= 0) {
-                        // 先瞬移到克隆区的对应位置，再动画回退一步
-                        idx = totalReal;
-                        setPosition(false);
-                        requestAnimationFrame(() => {
-                            idx = totalReal - 1;
-                            setPosition(true);
-                        });
-                    } else {
-                        idx--;
-                        setPosition(true);
+                    if (isAnimating || totalReal < 2) return;
+                    const step = getCardStep();
+                    if (!step) return;
+                    isAnimating = true;
+                    idx = (idx - 1 + totalReal) % totalReal;
+                    updateDots();
+
+                    // 先把右侧视口外的最后一张移到最前，无动画偏移 -step，再平滑滑回 0
+                    track.style.transition = 'none';
+                    track.insertBefore(track.lastElementChild, track.firstElementChild);
+                    track.style.transform = `translateX(-${step}px)`;
+                    track.offsetHeight;
+
+                    requestAnimationFrame(() => {
+                        track.style.transition = 'transform .45s var(--ease)';
+                        track.style.transform = 'translateX(0)';
+                        const onEnd = (e) => {
+                            if (e && (e.target !== track || e.propertyName !== 'transform')) return;
+                            track.removeEventListener('transitionend', onEnd);
+                            clearAnimLock();
+                        };
+                        track.addEventListener('transitionend', onEnd);
+                        animFallbackTimer = setTimeout(() => {
+                            track.removeEventListener('transitionend', onEnd);
+                            clearAnimLock();
+                        }, 560);
+                    });
+                }
+
+                function goTo(targetIdx) {
+                    if (isAnimating || targetIdx === idx) return;
+                    const forwardSteps = (targetIdx - idx + totalReal) % totalReal;
+                    if (forwardSteps === 1) { goNext(); return; }
+                    if (forwardSteps === totalReal - 1) { goPrev(); return; }
+                    track.style.transition = 'none';
+                    for (let k = 0; k < forwardSteps; k++) {
+                        track.appendChild(track.firstElementChild);
                     }
+                    track.style.transform = 'translateX(0)';
+                    idx = targetIdx;
+                    updateDots();
                 }
 
                 function stop() { if (timer) { clearInterval(timer); timer = null; } }
@@ -1853,11 +1899,15 @@
                 let resizeTimer = null;
                 window.addEventListener('resize', () => {
                     if (resizeTimer) clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(() => setPosition(false), 120);
+                    resizeTimer = setTimeout(() => {
+                        if (!isAnimating) {
+                            track.style.transition = 'none';
+                            track.style.transform = 'translateX(0)';
+                        }
+                    }, 120);
                 });
 
                 buildDots();
-                requestAnimationFrame(() => setPosition(false));
                 start();
             })();
 
